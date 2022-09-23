@@ -1,2 +1,1 @@
-# pf-vtr
-Multidimensional Particle Filtering for Visual Teach and Repeat
+### Multidimensional Particle Firltering for Visual Teach and Repeat

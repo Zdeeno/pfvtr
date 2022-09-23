@@ -1,0 +1,12 @@
+#goal definition
+float64 startPos
+float64 endPos
+uint8 traversals
+uint8 imagePub
+bool useDist
+string mapName
+---
+#result definition
+bool success
+---
+#feedback
