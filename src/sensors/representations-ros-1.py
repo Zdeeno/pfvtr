@@ -52,48 +52,37 @@ class RepresentationMatching:
         live_feature = self.align_abs._to_feature(msg)
         tmp_sns_in = self.sns_in_msg
 
-        if self.last_live is None or tmp_sns_in is None:
+        if self.last_live is None:
             self.last_live = live_feature[0]
-            out = FeaturesList(image.header, [live_feature[0]])
-            self.pub.publish(out)
+        out = FeaturesList(image.header, [live_feature[0]])
+        self.pub.publish(out)
+
+        if tmp_sns_in is None:
             return
 
-        ext_map = [*tmp_sns_in.map_features, self.last_live]
+        # match live vs. live map, live vs last live, live vs maps
+        ext_tensor = [*tmp_sns_in.map_features, self.last_live]
         align_in = SensorsInput()
-        align_in.map_features = ext_map
+        align_in.map_features = ext_tensor
         align_in.live_features = live_feature
         out = self.align_abs.process_msg(align_in)
-        hists = np.array(out[:-1])
-        live_hist = np.array(out[-1])
 
-        # transitions
-        curr_map_id = tmp_sns_in.maps[0]
-        map_num = tmp_sns_in.maps[1]
-        maps = tmp_sns_in.map_features[-map_num:]
-        curr_map = tmp_sns_in.map_features[(len(tmp_sns_in.map_features) - 2) // 2]
-        maps.insert(curr_map_id, curr_map)
-        in1 = []
-        in2 = []
-        for i in range(map_num):
-            for j in range(i, map_num):
-                in1.append(maps[i])
-                in2.append(maps[j])
-        align_in = SensorsInput()
-        align_in.map_features = in1
-        align_in.live_features = in2
-        out = self.align_abs.process_msg(align_in)
-        map_trans = np.max(out, axis=-1)
+        # decode these
+        align_out = SensorsInput()
+
+        live_hist = np.array(out[-1])  # all live map distances vs live img
+        map_hist = np.array(out[:-1])
 
         # create publish msg
-        align_out = SensorsInput()
         align_out.header = image.header
-        align_out.live_features = [Features(live_hist.flatten(), live_hist.shape)]
-        align_out.map_features = [Features(hists.flatten(), hists.shape)]
+        align_out.live_features = [Features(live_hist.flatten(), live_hist.shape)]  # now it is list of histogram, not features
+        align_out.map_features = [Features(map_hist.flatten(), map_hist.shape)]     # this too
         align_out.map_distances = tmp_sns_in.map_distances
-        align_out.map_transitions = tmp_sns_in.map_transitions
-        align_out.time_transitions = tmp_sns_in.time_transitions
-        align_out.maps = tmp_sns_in.maps
-        align_out.map_similarity = map_trans
+        align_out.map_transitions = tmp_sns_in.map_transitions                      # also list of histograms
+        align_out.map_timestamps = tmp_sns_in.map_timestamps
+        align_out.map_num = tmp_sns_in.map_num
+        align_out.map_similarity = tmp_sns_in.map_similarity    # TODO: this is not received from repeater yet!
+        align_out.map_offset = tmp_sns_in.map_offset
 
         # rospy.logwarn("sending: " + str(hists.shape) + " " + str(tmp_sns_in.map_distances))
         self.pub_match.publish(align_out)

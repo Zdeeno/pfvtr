@@ -6,7 +6,6 @@
     <arg name="cmd_vel_pub" default="/cmd_vel" doc="The topic that cmd_vel messages will be published on when replaying a map (can be the same as cmd_vel_sub)" />
     <arg name="cmd_vel_sub" default="/spot/cmd_vel" doc="The topic that cmd_vel messages will be recorded from when making a map (can be the same as cmd_vel_pub)" />
     <arg name="odom_topic" default="/spot/odometry" doc="The topic that odometry information will be read from" />
-    <arg name="additional_record_topics" default="" doc="Use this parameter to record any additional topics you wish to be in your map and repeated each traversal. Space separated topics names." />
 
     <!-- You should not need to edit anything below this line. -->
 
@@ -24,7 +23,6 @@
         <node pkg="bearnav2" type="mapmaker-ros-1.py" name="mapmaker" respawn="true" output="screen" args="-OO">
             <param name="camera_topic" type="string" value="$(arg camera_topic)" />
             <param name="cmd_vel_topic" type="string" value="$(arg cmd_vel_sub)" />
-            <param name="additional_record_topics" type="string" value="$(arg additional_record_topics)" />
         </node>
 
         <!-- node for repeating maps -->

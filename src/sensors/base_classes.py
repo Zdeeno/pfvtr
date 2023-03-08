@@ -242,6 +242,8 @@ class SensorFusion(ABC):
         publish alignment as a float from -1.0 to 1.0
         """
         out = SensorsOutput()
+        if self.header is not None:
+            out.header = self.header
         if self.alignment is not None:
             out.output = self.alignment
             out.output_uncertainty = self.alignment_std

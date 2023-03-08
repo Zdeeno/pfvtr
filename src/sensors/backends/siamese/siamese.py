@@ -26,9 +26,9 @@ class SiameseCNN(DisplacementEstimator, ProbabilityDistanceEstimator,
         # init neural network
         self.padding = padding
         self.resize_w = resize_w
-        model = get_parametrized_model(False, 3, 256, 0, 3, self.device)
+        model = get_parametrized_model(False, 3, 16, 0, 3, self.device)
         file_path = os.path.dirname(os.path.abspath(__file__))
-        self.model = load_model(model, os.path.join(file_path, "./model_eunord.pt")).to(self.device).float()
+        self.model = load_model(model, os.path.join(file_path, "./model_tiny.pt")).to(self.device).float()
         self.model = self.model.eval()
 
         # if self.device == t.device("cuda"):
