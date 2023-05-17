@@ -10,9 +10,9 @@
 
     <!-- You should not need to edit anything below this line. -->
 
-    <group ns="bearnav2">
+    <group ns="pfvtr">
 
-        <node pkg="bearnav2" type="representations-ros-1.py" name="representations" respawn="true" output="screen" args="-OO" >
+        <node pkg="pfvtr" type="representations-ros-1.py" name="representations" respawn="true" output="screen" args="-OO" >
             <param name="camera_topic" type="string" value="$(arg camera_topic)" />
         </node>
 

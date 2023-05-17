@@ -3,7 +3,7 @@ import rospy
 import cv2
 from sensor_msgs.msg import Image
 from cv_bridge import CvBridge
-from bearnav2.msg import FeatureLocations
+from pfvtr.msg import FeatureLocations
 
 #pubs and cv bridge
 train_pub = None

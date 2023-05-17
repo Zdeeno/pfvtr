@@ -5,7 +5,7 @@ import cv2
 #import alignment
 from sensor_msgs.msg import Image
 from cv_bridge import CvBridge
-from bearnav2.msg import Alignment
+from pfvtr.msg import Alignment
 
 mapDir = "/home/george/tmp/coffee"
 repeatDir = "/home/george/tmp/coffee/replays/imgs"

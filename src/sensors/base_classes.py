@@ -1,9 +1,9 @@
 from abc import ABC, abstractmethod
 import numpy as np
 from std_msgs.msg import Float32
-from bearnav2.msg import SensorsOutput, ImageList, Features
+from pfvtr.msg import SensorsOutput, ImageList, Features
 import rospy
-from bearnav2.srv import SetDist, SetDistResponse, Representations, RepresentationsResponse
+from pfvtr.srv import SetDist, SetDistResponse, Representations, RepresentationsResponse
 from typing import List
 
 

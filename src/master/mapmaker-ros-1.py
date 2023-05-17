@@ -10,9 +10,9 @@ import roslib
 from sensor_msgs.msg import Image
 from geometry_msgs.msg import Twist
 from std_msgs.msg import Float32, Header
-from bearnav2.msg import MapMakerAction, MapMakerResult, SensorsOutput, SensorsInput, ImageList, DistancedTwist, \
+from pfvtr.msg import MapMakerAction, MapMakerResult, SensorsOutput, SensorsInput, ImageList, DistancedTwist, \
     Features, FeaturesList
-from bearnav2.srv import SetDist, Alignment, Representations
+from pfvtr.srv import SetDist, Alignment, Representations
 import numpy as np
 from copy import deepcopy
 import ros_numpy

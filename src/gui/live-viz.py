@@ -2,7 +2,7 @@
 import rospy
 import cv2
 from dynamic_reconfigure.server import Server
-from bearnav2.cfg import LiveFeaturesConfig
+from pfvtr.cfg import LiveFeaturesConfig
 from sensor_msgs.msg import Image
 from sensor_msgs.msg import CompressedImage
 from cv_bridge import CvBridge

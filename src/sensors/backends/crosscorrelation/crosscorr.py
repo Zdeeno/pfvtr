@@ -5,7 +5,7 @@ from torch.nn import functional as F
 from torchvision import transforms
 import rospy
 import os
-from bearnav2.msg import SensorsInputImages
+from pfvtr.msg import SensorsInputImages
 from typing import List
 from scipy import interpolate
 import ros_numpy

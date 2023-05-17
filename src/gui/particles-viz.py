@@ -4,7 +4,7 @@ matplotlib.use('Agg')
 import rospy
 import cv2
 from sensor_msgs.msg import Image
-from bearnav2.msg import FloatList
+from pfvtr.msg import FloatList
 import matplotlib.pyplot as plt
 import numpy as np
 import ros_numpy
@@ -60,6 +60,6 @@ if __name__ == "__main__":
     
     rospy.init_node("pf_viz")
     pub = rospy.Publisher("pf_viz", Image, queue_size=0)
-    rospy.Subscriber("/bearnav2/particles", FloatList, callback)
+    rospy.Subscriber("/pfvtr/particles", FloatList, callback)
     print("PF viz ready...")
     rospy.spin()

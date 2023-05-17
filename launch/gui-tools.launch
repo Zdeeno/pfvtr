@@ -6,18 +6,18 @@
 
     <!-- You should not need to edit anything below this line. -->
 
-    <group ns="bearnav2">
+    <group ns="pfvtr">
        
         <!-- visualise information about the image alignment decision -->
-        <node pkg="bearnav2" type="histogram-viz.py" name="histogram_viz" respawn="true" args="-OO" />
+        <node pkg="pfvtr" type="histogram-viz.py" name="histogram_viz" respawn="true" args="-OO" />
 
         <!-- live visualisation of image features -->
-        <node pkg="bearnav2" type="live-viz.py" name="live_viz" respawn="true" args="-OO">
+        <node pkg="pfvtr" type="live-viz.py" name="live_viz" respawn="true" args="-OO">
             <param name="camera_topic" type="string" value="$(arg camera_topic)"/>
         </node>
 
         <!-- visualisation of image matches between map and camera -->
-        <node pkg="bearnav2" type="matches-viz.py" name="matches_viz" respawn="true" args="-OO" />
+        <node pkg="pfvtr" type="matches-viz.py" name="matches_viz" respawn="true" args="-OO" />
 
     </group>
 </launch>

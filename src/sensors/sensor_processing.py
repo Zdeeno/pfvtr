@@ -2,8 +2,8 @@ import numpy as np
 from base_classes import DisplacementEstimator, RelativeDistanceEstimator, AbsoluteDistanceEstimator, \
     SensorFusion, ProbabilityDistanceEstimator, RepresentationsCreator
 import rospy
-from bearnav2.srv import Alignment, AlignmentResponse, SetDist, SetDistResponse
-from bearnav2.msg import FloatList, SensorsInput, ImageList
+from pfvtr.srv import Alignment, AlignmentResponse, SetDist, SetDistResponse
+from pfvtr.msg import FloatList, SensorsInput, ImageList
 from scipy import interpolate
 
 """

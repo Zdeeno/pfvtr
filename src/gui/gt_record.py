@@ -4,7 +4,7 @@ matplotlib.use('Agg')
 import rospy
 import cv2
 from sensor_msgs.msg import Image
-from bearnav2.msg import FloatList, SensorsOutput
+from pfvtr.msg import FloatList, SensorsOutput
 import matplotlib.pyplot as plt
 import numpy as np
 import ros_numpy

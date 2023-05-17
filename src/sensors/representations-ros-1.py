@@ -1,13 +1,13 @@
 #!/usr/bin/env python
 
 import rospy
-from bearnav2.srv import Alignment, AlignmentResponse, Representations, RepresentationsResponse
+from pfvtr.srv import Alignment, AlignmentResponse, Representations, RepresentationsResponse
 from sensor_processing import BearnavClassic, PF2D, VisualOnly
 from backends.odometry.odom_dist import OdometryAbsolute, OdometryRelative
 from backends.siamese.siamese import SiameseCNN
 from backends.crosscorrelation.crosscorr import CrossCorrelation
 from sensor_msgs.msg import Image
-from bearnav2.msg import FeaturesList, ImageList, Features, SensorsInput
+from pfvtr.msg import FeaturesList, ImageList, Features, SensorsInput
 import ros_numpy
 import numpy as np
 

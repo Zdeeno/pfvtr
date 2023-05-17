@@ -11,9 +11,9 @@ import queue
 from sensor_msgs.msg import Image, Joy
 from geometry_msgs.msg import Twist
 from std_msgs.msg import Float64
-from bearnav2.msg import MapRepeaterAction, MapRepeaterResult, SensorsInput, SensorsOutput, ImageList, FeaturesList, \
+from pfvtr.msg import MapRepeaterAction, MapRepeaterResult, SensorsInput, SensorsOutput, ImageList, FeaturesList, \
     Features
-from bearnav2.srv import SetDist, SetClockGain, SetClockGainResponse, Alignment, Representations
+from pfvtr.srv import SetDist, SetClockGain, SetClockGainResponse, Alignment, Representations
 import numpy as np
 import ros_numpy
 

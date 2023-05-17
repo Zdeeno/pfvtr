@@ -12,13 +12,13 @@ tmux new-window -d -n "viz"
 x=$(echo $SHELL | sed 's:.*/::')
 
 tmux send-keys -t bearnav:bearnav "source ../../devel/setup.$x" Enter
-tmux send-keys -t bearnav:bearnav "roslaunch bearnav2 spot2.launch "
+tmux send-keys -t bearnav:bearnav "roslaunch pfvtr spot2.launch "
 tmux send-keys -t bearnav:repr "source ../../devel/setup.$x" Enter
-tmux send-keys -t bearnav:repr "roslaunch bearnav2 repr-spot2.launch "
+tmux send-keys -t bearnav:repr "roslaunch pfvtr repr-spot2.launch "
 tmux send-keys -t bearnav:mapmaker "source ../../devel/setup.$x" Enter
-tmux send-keys -t bearnav:mapmaker "rostopic pub /bearnav2/mapmaker/goal "
+tmux send-keys -t bearnav:mapmaker "rostopic pub /pfvtr/mapmaker/goal "
 tmux send-keys -t bearnav:repeater "source ../../devel/setup.$x" Enter
-tmux send-keys -t bearnav:repeater "rostopic pub /bearnav2/repeater/goal "
+tmux send-keys -t bearnav:repeater "rostopic pub /pfvtr/repeater/goal "
 tmux send-keys -t bearnav:misc "source ../../devel/setup.$x" Enter
 tmux send-keys -t bearnav:misc "timeout 3 rostopic hz /camera_front/image_color" Enter
 sleep 3

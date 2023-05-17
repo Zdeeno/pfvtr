@@ -6,7 +6,7 @@ from torchvision import transforms
 from torchvision.transforms import InterpolationMode
 import rospy
 import os
-from bearnav2.msg import SensorsInput, ImageList, Features
+from pfvtr.msg import SensorsInput, ImageList, Features
 from typing import List
 from scipy import interpolate
 import ros_numpy
