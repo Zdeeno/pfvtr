@@ -45,6 +45,13 @@ if __name__ == '__main__':
     rospy.init_node("sensor_processing")
     rospy.loginfo("Sensor processing started!")
     odom_topic = rospy.get_param("~odom_topic")
+    particle_num = rospy.get_param("~particle_num")
+    odom_error = rospy.get_param("~odom_error")
+    dist_init_std = rospy.get_param("~dist_init_std")
+    align_beta = rospy.get_param("~align_beta")
+    align_init_std = rospy.get_param("~align_init_std")
+    choice_beta = rospy.get_param("~choice_beta")
+    add_random = rospy.get_param("~add_random")
 
     # Choose sensor method
     align_abs = SiameseCNN(padding=PAD, resize_w=RESIZE_W)
@@ -66,8 +73,8 @@ if __name__ == '__main__':
     #                                    "matched_repr", odom_topic, "", "",
     #                                    "", "")
     # 2) Particle filter 2D - parameters are really important
-    repeat_fusion = PF2D(type_prefix="repeat", particles_num=600, odom_error=0.05, odom_init_std=1.0, align_beta=30.0,
-                         align_init_std=0.3, particles_frac=1, choice_beta=3.0, add_random=0.1, debug=True,
+    repeat_fusion = PF2D(type_prefix="repeat", particles_num=particle_num, odom_error=odom_error, odom_init_std=dist_init_std, align_beta=align_beta,
+                         align_init_std=align_init_std, particles_frac=1, choice_beta=choice_beta, add_random=add_random, debug=True,
                          abs_align_est=align_abs, rel_align_est=align_rel, rel_dist_est=dist_rel,
                          repr_creator=align_abs)
     repeat_handlers = start_subscribes(repeat_fusion,
