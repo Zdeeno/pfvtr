@@ -35,6 +35,8 @@ This action has also multiple parameters:
 - `imagePub` - lookaround window tells how many image forwards and backwards should be filtering done, we use 1 or 2.
 - `mapName` - name of the map you want to repeat (you can fill in multiple maps of the SAME trajectory divided by "," - see in the article)
 
+You can use the visualisation script `src/gui/particle_viz.py`, which publishes images showing position of the particles.
+
 ## Important
 
 - We use time synchronization for odometry and camera topics! You won't be able to record a map if your topics have a very different timestamp.
