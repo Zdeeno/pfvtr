@@ -46,9 +46,9 @@ def callback(msg):
 
     img = np.fromstring(fig.canvas.tostring_rgb(), dtype=np.uint8, sep='')
     img = img.reshape(fig.canvas.get_width_height()[::-1] + (3,))
-    plt.savefig("images/" + str(index) + ".png")
-    index += 1
-    plt.close()
+    # plt.savefig("images/" + str(index) + ".png")
+    # index += 1
+    # plt.close()
 
     # print("map0:",np.sum(maps == 0))
     # print("map1:", np.sum(maps == 1))
