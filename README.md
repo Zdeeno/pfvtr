@@ -1,58 +1,42 @@
-# Bearnav2
+# Particle-filtered Visual Teach and Repeat Navigation
 
 ## Overview
 
-This ROS package allows a robot to be taught a path through an environment using a camera.
-The robot can then retrace this path at a future point in time, correcting any error.
-The theory can be found in the [linked paper.](http://eprints.lincoln.ac.uk/12501/7/surfnav_2010_JFR.pdf)
-The system works by replaying the robot commands from during the training phase, and applying slight adjustments to them according to how the camera looks compared to during the teaching phase.
-As long as the error is reasonable, the robot will converge to the original path.
+This ROS package allows a robot to be taught a path through an environment using a monocular uncalibrated camera.<br>
+PFVT exploits the foundations of [Bearnav](https://github.com/gestom/stroll_bearnav).<br>
+The whole method is described in [paper](https://ieeexplore.ieee.org/document/10042995).
 
-## Installation
+## First start
 
-Clone the repository into a ROS workspace and build.
-
+Once built, to run the system use `roslaunch pfvtr jackal.launch`. <br>
+Inside the launch file, set required variables at the top of the file, pointing to topics which are required by the framework (odometry, camera, controller, cmd_vel).
 
 ## Usage
 
-Once built, to run the system use `roslaunch pfvtr pfvtr-gui.launch`. May run slower, but provides more feedback using gui interface.
-You can optionally run `roslaunch pfvtr pfvtr-no-gui.launch` if these aren't required. Faster as no additional computations are done.
+We recommend using tmux and we prepared a tmux launch script `start_session.sh` for you which sources the package in multiple windows. <br>
+Our package requires input images of width 512 so there is a window `resize` in the tmux which uses standart resizing ROS node. You just need to run it with parameters based on your camera resolution. <br>
+The first window is made for the main launch file. The second and third windows are for `mapping` and `repeating`. <br>
 
-Inside these launch files, set the three required variables at the top of the file, pointing to your robot's camera topic, cmd\_vel topic, and odometry topic.
+Once the package is running, you can begin mapping by publishing a message to the mapmaker module: <br>
+`rostopic pub /pfvtr/mapmaker/goal [tab][tab]` <br>
+There are multiple parameters in the action command:
+- `sourceMap` - this is for continual mapping you can leave it empty
+- `mapStep` - distance between map images, if you keep 0.0 it is automatically set to 1.0m
+- `start` - set to True to start mapping, when your mapping is finished you have to publish this action again with start = false to save the map
+- `mapName` - name of the map under which it is saved into `home/.ros` folder
+- `SaveImgsForViz` - by default the framework saves only the image representations in latent space, if you want to save also jpg images set this to true
 
-Don't forget to source your workspace!
+To replay a map, run: <br>
+`rostopic pub /pfvtr/repeater/goal [tab][tab]` <br>
+This action has also multiple parameters:
+- `startPos` - how far in the map you want to start repeating - usually keep 0.0 beacause you want to repeat from start
+- `endPos` - currently not working keep as is
+- `traversals` - currently not working keep as is
+- `imagePub` - lookaround window tells how many image forwards and backwards should be filtering done, we use 1 or 2.
+- `mapName` - name of the map you want to repeat (you can fill in multiple maps of the SAME trajectory divided by "," - see in the article)
 
-Once the package is running, you can begin mapping by publishing a message to the mapmaker module:
+## Important
 
-`rostopic pub /pfvtr/mapmaker/goal [tab][tab]`
-Fill in the mapName, for loading the map later!
-Set start to `true`
-Publish the message (enter) to start mapping (you can Ctrl+C this publish and it will not stop the mapping).
-After you finnish your path, publish the same message with same mapName, but change start to `false`.
-
-Note: Every line of the message above mapName is internal stuff for ROS, so do not worry about it.
-
-To replay a map, run:
-
-`rostopic pub /pfvtr/repeater/goal [tab][tab]`
-
-Simply fill in the mapname field and your robot will begin to re-trace the path.
-
-You can start following the map at different point by setting startPos to how far (in meters) from the beginning you want to start.
-endPos is how far (in meters) from the beginning you want to end.
-
-Note: Every line of the message above mapName is internal stuff for ROS, so do not worry about it.
-
-
-
-
-## Improvements
-
- - Maps are now streamed from disk, therefore don't require waiting for them to be loaded, and can be much larger
- - Can cover strafe movement
-
-## Principles
-### Mapping
-![Mapping](images/Mapping.svg)
-### Replaying
-![Navigating](images/Navigating.svg)
+- We use time synchronization for odometry and camera topics! You won't be able to record a map if your topics have a very different timestamp.
+- The robot is repeating the action commands from mapping phase so at the initial position there is command with 0 velocity, you have to push the robot little bit to start repeating. You also should not stop completelly during mapping because of this.
+- Keep in mind that this is not production code it can yield some errors eventhough it is working properly. We also suggest to relaunch the code between the traversals.
