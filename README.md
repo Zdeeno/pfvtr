@@ -3,9 +3,9 @@
 ## Overview
 
 This ROS package allows a robot to be taught a path through an environment using a monocular uncalibrated camera.<br>
-PFVT exploits the foundations of [Bearnav](https://github.com/gestom/stroll_bearnav).<br>
+PFVTR exploits the foundations of [Bearnav](https://github.com/gestom/stroll_bearnav).<br>
 The whole method is described in [paper](https://ieeexplore.ieee.org/document/10042995). <br>
-The neural network used by the pfvtr is described [here](https://github.com/Zdeeno/Siamese-network-image-alignment).
+The neural network used by the PFVTR is described [here](https://github.com/Zdeeno/Siamese-network-image-alignment).
 
 
 ## First start
