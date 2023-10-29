@@ -2,6 +2,7 @@
 float64 startPos
 float64 endPos
 uint8 traversals
+bool nullCmd
 uint8 imagePub
 bool useDist
 string mapName

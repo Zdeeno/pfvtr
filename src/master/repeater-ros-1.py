@@ -113,6 +113,7 @@ class ActionServer():
         self.map_num = 0
         self.last_map = 0
         self.nearest_map_img = -1
+        self.null_cmd = False
 
         rospy.logdebug("Waiting for services to become available...")
         rospy.wait_for_service("repeat/set_dist")
@@ -260,6 +261,7 @@ class ActionServer():
         self.align_reset_srv(0.0, 1)
         self.endPosition = goal.endPos
         self.nextStep = 0
+        self.null_cmd = goal.nullCmd
 
         # reload all the buffers
         self.map_images = []
@@ -376,6 +378,8 @@ class ActionServer():
         self.action_dists = []
         self.action_times = []
         for topic, msg, t in self.bag.read_messages(topics=["recorded_actions"]):
+            if self.null_cmd and msg.twist.linear.x == 0.0 and msg.twist.linear.y == 0.0 and msg.twist.angular.z == 0.0:
+                continue
             self.action_dists.append(float(msg.distance))
             self.actions.append(msg.twist)
         self.action_dists = np.array(self.action_dists)

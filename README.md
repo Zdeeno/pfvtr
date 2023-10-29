@@ -36,13 +36,14 @@ This action has also multiple parameters:
 - `startPos` - how far in the map you want to start repeating - usually keep 0.0 beacause you want to repeat from start
 - `endPos` - currently not working keep as is
 - `traversals` - currently not working keep as is
-- `imagePub` - lookaround window tells how many image forwards and backwards should be filtering done, we use 1 or 2.
-- `mapName` - name of the map you want to repeat (you can fill in multiple maps of the SAME trajectory divided by "," - see in the article)
+- `nullCmd` - set to true if you want to skip recorded commands with zero velocity
+- `imagePub` - lookaround window sets how many images are used for visual feedback, we use 1 (3 images) or 2 (5 images)
+- `mapName` - name of the map you want to repeat (you can fill in multiple maps of the SAME trajectory divided by "," - see continous mapping in the article)
 
 You can use the visualisation script `src/gui/particle_viz.py`, which publishes images showing position of the particles.
 
 ## Important
 
 - We use time synchronization for odometry and camera topics! You won't be able to record a map if your topics have a very different timestamp.
-- The robot is repeating the action commands from mapping phase so at the initial position there is command with 0 velocity, you have to push the robot little bit to start repeating. You also should not stop completelly during mapping because of this.
+- The robot is repeating the action commands from mapping phase so at the initial position there is command with 0 velocity, you have to push the robot little bit to start repeating. You also should not stop completelly during mapping because of this. You cant set `nullCmd` to true if you want to avoid this behaviour.
 - Keep in mind that this is not production code it can yield some errors eventhough it is working properly. We also suggest to relaunch the code between the traversals.
