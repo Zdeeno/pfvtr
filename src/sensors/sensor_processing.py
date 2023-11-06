@@ -28,7 +28,7 @@ class BearnavClassic(SensorFusion):
     def _process_abs_alignment(self, msg):
         # if msg.map_features[0].shape[0] > 1:
         #     rospy.logwarn("Bearnav classic can process only one image")
-        histogram = np.array(msg.map_features[0].values).reshape(msg.map_features[0].shape)
+        histogram = np.array(msg.map_histograms[0].values).reshape(msg.map_histograms[0].shape)
         self.alignment = (np.argmax(histogram) - np.size(histogram) // 2) / (np.size(histogram) // 2)
         rospy.loginfo("Current displacement: " + str(self.alignment))
         # self.publish_align()
@@ -61,7 +61,7 @@ class VisualOnly(SensorFusion):
         raise Exception("Visual only does not support relative alignment")
 
     def _process_abs_alignment(self, msg: SensorsInput):
-        hists = np.array(msg.live_features[0].values).reshape(msg.live_features[0].shape)
+        hists = np.array(msg.live_histograms[0].values).reshape(msg.live_histograms[0].shape)
         hist = np.max(hists, axis=0)
         half_size = np.size(hist) / 2.0
         self.alignment = float(np.argmax(hist) - (np.size(hist) // 2.0)) / half_size  # normalize -1 to 1
@@ -181,10 +181,10 @@ class PF2D(SensorFusion):
         if self.last_time is None:
             self.last_time = curr_time
             return
-        hists = np.array(msg.map_features[0].values).reshape(msg.map_features[0].shape)
+        hists = np.array(msg.map_histograms[0].values).reshape(msg.map_histograms[0].shape)
         self.last_hists = hists
         map_trans = np.array(msg.map_transitions[0].values).reshape(msg.map_transitions[0].shape)
-        live_hist = np.array(msg.live_features[0].values).reshape(msg.live_features[0].shape)
+        live_hist = np.array(msg.live_histograms[0].values).reshape(msg.live_histograms[0].shape)
         hist_width = hists.shape[-1]
         shifts = np.round(np.array(msg.map_offset) * (hist_width // 2)).astype(int)
         hists = np.roll(hists, shifts, -1)  # not sure if last dim should be rolled like this

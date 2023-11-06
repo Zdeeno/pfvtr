@@ -5,6 +5,7 @@ from pfvtr.srv import Alignment, AlignmentResponse, Representations, Representat
 from sensor_processing import BearnavClassic, PF2D, VisualOnly
 from backends.odometry.odom_dist import OdometryAbsolute, OdometryRelative
 from backends.siamese.siamese import SiameseCNN
+from backends.siamese.siamfeature import SiamFeature
 from backends.crosscorrelation.crosscorr import CrossCorrelation
 
 
@@ -54,7 +55,7 @@ if __name__ == '__main__':
     add_random = rospy.get_param("~add_random")
 
     # Choose sensor method
-    align_abs = SiameseCNN(padding=PAD, resize_w=RESIZE_W)
+    align_abs = SiamFeature(padding=PAD, resize_w=RESIZE_W)
     align_rel = CrossCorrelation(padding=PAD, network_division=NETWORK_DIVISION, resize_w=RESIZE_W)
     dist_abs = OdometryAbsolute()
     dist_rel = OdometryRelative()

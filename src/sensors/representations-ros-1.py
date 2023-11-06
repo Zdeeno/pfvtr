@@ -5,9 +5,10 @@ from pfvtr.srv import Alignment, AlignmentResponse, Representations, Representat
 from sensor_processing import BearnavClassic, PF2D, VisualOnly
 from backends.odometry.odom_dist import OdometryAbsolute, OdometryRelative
 from backends.siamese.siamese import SiameseCNN
+from backends.siamese.siamfeature import SiamFeature
 from backends.crosscorrelation.crosscorr import CrossCorrelation
 from sensor_msgs.msg import Image
-from pfvtr.msg import FeaturesList, ImageList, Features, SensorsInput
+from pfvtr.msg import FeaturesList, ImageList, Features, SensorsInput, Histogram
 import ros_numpy
 import numpy as np
 
@@ -27,7 +28,7 @@ class RepresentationMatching:
 
         # Choose sensor method
 
-        self.align_abs = SiameseCNN(padding=PAD, resize_w=RESIZE_W)
+        self.align_abs = SiamFeature(padding=PAD, resize_w=RESIZE_W)
         self.pub = rospy.Publisher("live_representation", FeaturesList, queue_size=1)
         self.pub_match = rospy.Publisher("matched_repr", SensorsInput, queue_size=1)
         self.sub = rospy.Subscriber(camera_topic, Image,
@@ -75,8 +76,8 @@ class RepresentationMatching:
 
         # create publish msg
         align_out.header = image.header
-        align_out.live_features = [Features(live_hist.flatten(), live_hist.shape)]  # now it is list of histogram, not features
-        align_out.map_features = [Features(map_hist.flatten(), map_hist.shape)]     # this too
+        align_out.live_histograms = [Histogram(live_hist.flatten(), live_hist.shape)]  # now it is list of histogram, not features
+        align_out.map_histograms = [Histogram(map_hist.flatten(), map_hist.shape)] # this too
         align_out.map_distances = tmp_sns_in.map_distances
         align_out.map_transitions = tmp_sns_in.map_transitions                      # also list of histograms
         align_out.map_timestamps = tmp_sns_in.map_timestamps

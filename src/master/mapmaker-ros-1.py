@@ -38,7 +38,7 @@ def get_map_dists(mappath):
 
 
 def numpy_to_feature(array):
-    return Features(array.flatten(), array.shape)
+    return Features(array[0].flatten(), array[0].shape, array[1])
 
 
 def save_img(img_repr, image, header, map_name, curr_dist, curr_hist, curr_align, source_map, save_img):
@@ -135,7 +135,7 @@ class ActionServer:
     def distance_imgCB(self, repr_msg, dist_msg, img):
         if self.img_features is None:
             rospy.logwarn("Mapmaker successfuly received images")
-        self.img_features = np.array(repr_msg.data[0].values).reshape(repr_msg.data[0].shape)
+        self.img_features = [np.array(repr_msg.data[0].values).reshape(repr_msg.data[0].shape), repr_msg.data[0].descriptors]
         self.img_msg = img
         self.header = repr_msg.header
         dist = dist_msg.output
