@@ -7,7 +7,7 @@ PFVTR exploits the foundations of [Bearnav](https://github.com/gestom/stroll_bea
 The whole method is described in [paper](https://ieeexplore.ieee.org/document/10042995). <br>
 The neural network used by the PFVTR is described [here](https://github.com/Zdeeno/Siamese-network-image-alignment). <br>
 
-![Diagram](flowchart.png)
+![Diagram](flowchart.svg)
 
 
 ## First start
