@@ -255,7 +255,7 @@ class ActionServer():
         map_name = goal.mapName.split(",")[0]
         self.parseParams(os.path.join(map_name, "params"))
 
-        self.map_publish_span = max(int(goal.imagePub), 1)
+        self.map_publish_span = int(goal.imagePub)
 
         # set distance to zero
         rospy.logdebug("Resetting distnace and alignment")
