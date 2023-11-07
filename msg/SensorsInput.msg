@@ -2,7 +2,9 @@ Header header
 uint32[] mode                         # mapping, repeating
 Features[] map_features
 Features[] live_features
-Features[] map_transitions
+Histogram[] map_histograms
+Histogram[] live_histograms
+Histogram[] map_transitions
 float32[] map_similarity
 float32[] map_offset
 float32[] map_distances

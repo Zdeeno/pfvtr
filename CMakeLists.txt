@@ -68,7 +68,10 @@ add_message_files(
     Features.msg
     SensorsInputImages.msg
     FeaturesList.msg
-)
+    Descriptor.msg
+    Histogram.msg
+    HistogramList.msg
+    )
 
 ## Generate services in the 'srv' folder
  add_service_files(

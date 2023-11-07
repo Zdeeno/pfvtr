@@ -12,7 +12,7 @@ from sensor_msgs.msg import Image, Joy
 from geometry_msgs.msg import Twist
 from std_msgs.msg import Float64
 from pfvtr.msg import MapRepeaterAction, MapRepeaterResult, SensorsInput, SensorsOutput, ImageList, FeaturesList, \
-    Features
+    Features, Histogram
 from pfvtr.srv import SetDist, SetClockGain, SetClockGainResponse, Alignment, Representations
 import numpy as np
 import ros_numpy
@@ -67,8 +67,9 @@ def load_map(mappaths, images, distances, trans, times, source_align):
                 else:
                     align = 0
                 feature = Features()
-                feature.shape = r.shape
-                feature.values = list(r.flatten())
+                feature.shape = r[0].shape
+                feature.values = list(r[0].flatten())
+                feature.descriptors = r[1]
                 tmp_images.append(feature)
                 tmp_times.append(ts)
                 tmp_align.append(align)
@@ -180,7 +181,7 @@ class ActionServer():
             sns_in.live_features = []
             sns_in.map_features = features
             sns_in.map_distances = distances
-            sns_in.map_transitions = [Features(transitions.flatten(), transitions.shape)]
+            sns_in.map_transitions = [Histogram(transitions.flatten(), transitions.shape)]
             sns_in.map_timestamps = timestamps
             sns_in.map_num = self.map_num
             # TODO: sns_in.map_similarity
@@ -254,7 +255,7 @@ class ActionServer():
         map_name = goal.mapName.split(",")[0]
         self.parseParams(os.path.join(map_name, "params"))
 
-        self.map_publish_span = int(goal.imagePub)
+        self.map_publish_span = max(int(goal.imagePub), 1)
 
         # set distance to zero
         rospy.logdebug("Resetting distnace and alignment")
