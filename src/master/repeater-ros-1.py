@@ -307,6 +307,8 @@ class ActionServer():
             self.replay_timewise(additionalPublishers)  # for timewise repeating
 
         # self.shutdown() only for sth
+        while self.isRepeating:
+            rospy.sleep(1)
         result.success = True
         self.server.set_succeeded(result)
 
