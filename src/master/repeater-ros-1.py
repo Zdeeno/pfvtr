@@ -395,7 +395,8 @@ class ActionServer():
             if self.isRepeating:
                 self.joy_pub.publish(self.actions[closest_idx])
         else:
-            rospy.logwarn("No action available")
+            rospy.logwarn("No action available - stopping")
+            self.joy_pub.publish(Twist()) # publish empty action to stop the robot at the end
 
 
 if __name__ == '__main__':

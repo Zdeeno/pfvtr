@@ -37,7 +37,7 @@ def callback(msg):
     ax.plot(estimate_x, estimate_y, "rx")
     ax.set_xlim([-0.5, 0.5])
     ax.set_ylim([estimate_y - 3.0, estimate_y + 3.0])
-    ax.legend(["original map", "faulty map", "estimate"])
+    ax.legend(["particles"]) # , "faulty map", "estimate"])
     ax.set_xlabel("Displacement [%]")
     ax.set_ylabel("Distance [m]")
     # ax.set_ylim([np.min(distances), np.max(distances)])
