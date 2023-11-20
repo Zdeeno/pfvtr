@@ -53,9 +53,16 @@ if __name__ == '__main__':
     align_init_std = rospy.get_param("~align_init_std")
     choice_beta = rospy.get_param("~choice_beta")
     add_random = rospy.get_param("~add_random")
+    matching_type = rospy.get_param("~matching_type")
 
     # Choose sensor method
-    align_abs = SiamFeature(padding=PAD, resize_w=RESIZE_W)
+    align_abs = None
+    if matching_type == "siam_f":
+        align_abs = SiamFeature(padding=PAD, resize_w=RESIZE_W)
+    if matching_type == "siam":
+        align_abs = SiameseCNN(padding=PAD, resize_w=RESIZE_W)
+    if align_type is None:
+        raise Exception("Invalid matching scheme - edit launch file!")
     align_rel = CrossCorrelation(padding=PAD, network_division=NETWORK_DIVISION, resize_w=RESIZE_W)
     dist_abs = OdometryAbsolute()
     dist_rel = OdometryRelative()

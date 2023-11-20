@@ -25,10 +25,17 @@ class RepresentationMatching:
         rospy.init_node("sensor_processing")
         rospy.loginfo("Sensor processing started!")
         camera_topic = rospy.get_param("~camera_topic")
+        matching_type = rospy.get_param("~matching_type")
 
         # Choose sensor method
+        align_abs = None
+        if matching_type == "siam_f":
+            self.align_abs = SiamFeature(padding=PAD, resize_w=RESIZE_W)
+        if matching_type == "siam":
+            self.align_abs = SiameseCNN(padding=PAD, resize_w=RESIZE_W)
+        if align_type is None:
+            raise Exception("Invalid matching scheme - edit launch file!")
 
-        self.align_abs = SiamFeature(padding=PAD, resize_w=RESIZE_W)
         self.pub = rospy.Publisher("live_representation", FeaturesList, queue_size=1)
         self.pub_match = rospy.Publisher("matched_repr", SensorsInput, queue_size=1)
         self.sub = rospy.Subscriber(camera_topic, Image,
