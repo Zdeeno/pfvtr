@@ -6,7 +6,7 @@
     <arg name="cmd_vel_pub" default="/bluetooth_teleop/cmd_vel" doc="The topic that cmd_vel messages will be published on when replaying a map (can be the same as cmd_vel_sub)" />
     <arg name="cmd_vel_sub" default="/bluetooth_teleop/cmd_vel" doc="The topic that cmd_vel messages will be recorded from when making a map (can be the same as cmd_vel_pub)" />
     <arg name="odom_topic" default="/robot1/odometry" doc="The topic that odometry information will be read from" />
-    <arg name="additional_record_topics" default="" doc="Use this parameter to record any additional topics you wish to be in your map and repeated each traversal. Space separated topics names." />
+    <arg name="additional_record_topics" default="/robot1/gt;" doc="Use this parameter to record any additional topics you wish to be in your map and repeated each traversal. Space separated topics names." />
 
     <!-- You should not need to edit anything below this line. -->
 

@@ -12,6 +12,7 @@ from geometry_msgs.msg import Twist
 from std_msgs.msg import Float32, Header
 from pfvtr.msg import MapMakerAction, MapMakerResult, SensorsOutput, SensorsInput, ImageList, DistancedTwist, \
     Features, FeaturesList
+from nav.msg import Odometry
 from pfvtr.srv import SetDist, Alignment, Representations
 import numpy as np
 from copy import deepcopy
@@ -80,6 +81,7 @@ class ActionServer:
         self.target_distances = None
         self.collected_distances = None
         self.dist = 0.0
+        self.lastOdom = None
         
         rospy.loginfo("Waiting for services to become available...")
         rospy.wait_for_service("teach/set_dist")
@@ -94,6 +96,10 @@ class ActionServer:
         rospy.logdebug("Subscibing to commands")
         self.joy_topic = rospy.get_param("~cmd_vel_topic")
         self.joy_sub = rospy.Subscriber(self.joy_topic, Twist, self.joyCB, queue_size=100, buff_size=250000)
+
+        rospy.logdebug("Subscribing to odometry")
+        self.add_topic = rospy.get_param("~additional_record_topics")
+        self.add_sub = rospy.Subscriber(self.odom_topic, Odometry, self.miscCB, queue_size=10)
 
         rospy.logdebug("Starting mapmaker server")
         self.server = actionlib.SimpleActionServer("mapmaker", MapMakerAction,
@@ -122,10 +128,13 @@ class ActionServer:
 
         rospy.logwarn("Mapmaker started, awaiting goal")
 
+    def OdomCB(self, msg):
+        self.lastOdom = msg
+
     def miscCB(self, msg, args):
         if self.isMapping:
             topicName = args
-            rospy.logdebug(f"Adding misc from {topicName}")
+            # rospy.logdebug(f"Adding misc from {topicName}")
             self.bag.write(topicName, msg)
 
     def distance_wrapper(self, repr_msg, dist_msg, align_msg, img):
@@ -191,7 +200,7 @@ class ActionServer:
             rospy.logdebug("Adding joy")
             save_msg = DistancedTwist()
             save_msg.twist = msg
-            save_msg.distance = self.dist
+            save_msg.distance = self.disti
             self.bag.write("recorded_actions", save_msg)
 
     def actionCB(self, goal):
