@@ -61,7 +61,7 @@ if __name__ == '__main__':
         align_abs = SiamFeature(padding=PAD, resize_w=RESIZE_W)
     if matching_type == "siam":
         align_abs = SiameseCNN(padding=PAD, resize_w=RESIZE_W)
-    if align_type is None:
+    if align_abs is None:
         raise Exception("Invalid matching scheme - edit launch file!")
     align_rel = CrossCorrelation(padding=PAD, network_division=NETWORK_DIVISION, resize_w=RESIZE_W)
     dist_abs = OdometryAbsolute()

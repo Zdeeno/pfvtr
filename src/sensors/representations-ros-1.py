@@ -28,12 +28,12 @@ class RepresentationMatching:
         matching_type = rospy.get_param("~matching_type")
 
         # Choose sensor method
-        align_abs = None
+        self.align_abs = None
         if matching_type == "siam_f":
             self.align_abs = SiamFeature(padding=PAD, resize_w=RESIZE_W)
         if matching_type == "siam":
             self.align_abs = SiameseCNN(padding=PAD, resize_w=RESIZE_W)
-        if align_type is None:
+        if self.align_abs is None:
             raise Exception("Invalid matching scheme - edit launch file!")
 
         self.pub = rospy.Publisher("live_representation", FeaturesList, queue_size=1)

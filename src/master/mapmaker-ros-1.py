@@ -12,7 +12,7 @@ from geometry_msgs.msg import Twist
 from std_msgs.msg import Float32, Header
 from pfvtr.msg import MapMakerAction, MapMakerResult, SensorsOutput, SensorsInput, ImageList, DistancedTwist, \
     Features, FeaturesList
-from nav.msg import Odometry
+from nav_msgs.msg import Odometry
 from pfvtr.srv import SetDist, Alignment, Representations
 import numpy as np
 from copy import deepcopy
@@ -99,7 +99,8 @@ class ActionServer:
 
         rospy.logdebug("Subscribing to odometry")
         self.add_topic = rospy.get_param("~additional_record_topics")
-        self.add_sub = rospy.Subscriber(self.odom_topic, Odometry, self.miscCB, queue_size=10)
+        if len(self.add_topic) > 3:
+            self.add_sub = rospy.Subscriber(self.add_topic, Odometry, self.miscCB, queue_size=10)
 
         rospy.logdebug("Starting mapmaker server")
         self.server = actionlib.SimpleActionServer("mapmaker", MapMakerAction,
@@ -128,14 +129,10 @@ class ActionServer:
 
         rospy.logwarn("Mapmaker started, awaiting goal")
 
-    def OdomCB(self, msg):
-        self.lastOdom = msg
-
-    def miscCB(self, msg, args):
+    def miscCB(self, msg):
         if self.isMapping:
-            topicName = args
             # rospy.logdebug(f"Adding misc from {topicName}")
-            self.bag.write(topicName, msg)
+            self.lastOdom = msg
 
     def distance_wrapper(self, repr_msg, dist_msg, align_msg, img):
         self.curr_alignment = align_msg.output
@@ -200,8 +197,11 @@ class ActionServer:
             rospy.logdebug("Adding joy")
             save_msg = DistancedTwist()
             save_msg.twist = msg
-            save_msg.distance = self.disti
-            self.bag.write("recorded_actions", save_msg)
+            save_msg.distance = self.dist
+            self.bag.write("/recorded_actions", save_msg)
+            if self.lastOdom is not None:
+                self.bag.write("/recorded_odometry", self.lastOdom)
+
 
     def actionCB(self, goal):
 
