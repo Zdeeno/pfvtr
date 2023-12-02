@@ -357,7 +357,7 @@ class ActionServer():
                 rospy.sleep(sleepTime)
                 previousMessageTime = ts
             # publish
-            if topic == "recorded_actions":
+            if topic == "/recorded_actions":
                 self.joy_pub.publish(message.twist)
             else:
                 additionalPublishers[topic].publish(message)
@@ -380,7 +380,7 @@ class ActionServer():
         rospy.logwarn("Starting to parse the actions")
         self.action_dists = []
         self.action_times = []
-        for topic, msg, t in self.bag.read_messages(topics=["recorded_actions"]):
+        for topic, msg, t in self.bag.read_messages(topics=["/recorded_actions"]):
             if self.null_cmd and msg.twist.linear.x == 0.0 and msg.twist.linear.y == 0.0 and msg.twist.angular.z == 0.0:
                 continue
             self.action_dists.append(float(msg.distance))
