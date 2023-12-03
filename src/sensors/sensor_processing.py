@@ -140,9 +140,10 @@ class PF2D(SensorFusion):
         dst = self.distance
         self.particles = np.transpose(np.ones((3, self.particles_num)).transpose() * np.array((dst, 0, 0)) + \
                                       self.rng.normal(loc=(0, 0, 0), scale=var, size=(self.particles_num, 3)))
-        self.particles = self.particles - np.mean(self.particles, axis=-1, keepdims=True)
+        # self.particles = self.particles - np.mean(self.particles, axis=-1, keepdims=True)
         self.map_num = msg.map_num
         self.particles[2] = np.random.randint(low=0, high=self.map_num, size=(self.particles_num,))
+        self.particle_prob = np.ones(self.particles_num) / self.particles_num
         self.last_image = None
         self._get_coords()
         rospy.loginfo("Particles reinitialized at position " + str(self.distance) + "m" +
