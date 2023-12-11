@@ -297,11 +297,11 @@ class ActionServer():
         self.distance_reset_srv(goal.startPos, self.map_num)
         self.curr_dist = goal.startPos
         time.sleep(2)  # waiting till some map images are parsed
-        self.isRepeating = True
         # kick into the robot at the beggining:
         rospy.loginfo("Repeating started!")
         if self.use_distances:
             self.parse_rosbag()
+            self.isRepeating = True
             self.play_closest_action()
         else:
             self.replay_timewise(additionalPublishers)  # for timewise repeating
@@ -386,18 +386,21 @@ class ActionServer():
             self.action_dists.append(float(msg.distance))
             self.actions.append(msg.twist)
         self.action_dists = np.array(self.action_dists)
+        self.bag.close()
+        self.bag = None
         rospy.logwarn("Actions and distances successfully loaded!")
 
     def play_closest_action(self):
         # TODO: Does not support additional topics
         if len(self.action_dists) > 0:
-            distance_to_pos = abs(self.curr_dist - self.action_dists)
-            closest_idx = np.argmin(distance_to_pos)
-            # rospy.loginfo("replaying action at: " + str(closest_idx))
             if self.isRepeating:
+                distance_to_pos = abs(self.curr_dist - self.action_dists)
+                closest_idx = np.argmin(distance_to_pos)
+                # rospy.loginfo("replaying action at: " + str(closest_idx))
                 self.joy_pub.publish(self.actions[closest_idx])
         else:
             rospy.logwarn("No action available - stopping")
+            self.align_reset_srv(0.0, 1)
             self.joy_pub.publish(Twist()) # publish empty action to stop the robot at the end
 
 

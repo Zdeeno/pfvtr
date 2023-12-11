@@ -264,6 +264,8 @@ class SensorFusion(ABC):
     def set_alignment(self, msg: SetDist) -> SetDistResponse:
         self.alignment = msg.dist
         self.alignment_std = 0.0
+        if msg.dist == 0.0: # reset alignment
+            self.publish_align(None)
         return SetDistResponse()
 
     # callback for services

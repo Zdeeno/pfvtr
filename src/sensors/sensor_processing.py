@@ -245,7 +245,11 @@ class PF2D(SensorFusion):
             # Monte carlo sampling of transitions
             trans = -self._sample_hist(map_trans[map_idx])
             trans_per_particle = trans[closest_transition.squeeze(), np.arange(particles_in_map)].transpose()
-            frac_per_particle = traveled_fracs[closest_transition]
+            try:
+                frac_per_particle = traveled_fracs[closest_transition]
+            except Exception as e:
+                rospy.logwarn(e)
+                rospy.logwarn(str(traveled_fracs) + " : " + str(time_diffs[map_idx]) + " : "  + str(curr_time_diff) + " : " + str(timestamps))
             # generate new particles
             out = []
             # rolls = np.random.rand(self.particles.shape[1])
@@ -385,12 +389,13 @@ class PF2D(SensorFusion):
                 # for testing not using 2nd dim
                 self.coords[1] = (np.argmax(np.max(self.last_hists, axis=0)) - self.last_hists[0].size // 2) / \
                                  self.last_hists[0].size
-            maps = []
-            for i in range(self.map_num):
-                maps.append(np.sum(self.particle_prob[self.particles[2] == i]))
-            ind = np.argmax(maps)
-            # rospy.logwarn(maps)
-            self.map = ind
+            if np.size(self.particle_prob) == np.size(self.particles[2]): # avoid inconsistencies
+                maps = []
+                for i in range(self.map_num):
+                    maps.append(np.sum(self.particle_prob[self.particles[2] == i]))
+                ind = np.argmax(maps)
+                # rospy.logwarn(maps)
+                self.map = ind
 
         else:
             self.coords = [0.0, 0.0]
@@ -429,13 +434,21 @@ class PF2D(SensorFusion):
         # TODO: this method can yield an error when class variables are changed in process - make copies
         align_span = 0.5    # crop of particles to estimate alignment
         predictive = 0.0   # make alignment slightly predictive
+        if np.size(particles[0]) != np.size(particle_prob):
+            particles = particles[:, :self.particles_num]
+            particle_prob = particle_prob[:self.particles_num]
+            rospy.logwarn("Ommiting particles spawned this round - concurrency issue")
         dist = np.sum(particles[0] * particle_prob) / np.sum(particle_prob)
         mask = (particles[0] < (dist + align_span + predictive)) \
                * (particles[0] > (dist - align_span + predictive))
         p_num = np.sum(mask)
         if p_num < 50:
             rospy.logwarn("Only " + str(p_num) + " particles used for alignment estimate - could be very noisy")
-        align = np.sum(particles[1, mask] * particle_prob[mask]) / np.sum(particle_prob[mask])
+        try:
+            align = np.sum(particles[1, mask] * particle_prob[mask]) / np.sum(particle_prob[mask])
+        except Exception as e:
+            rospy.logwarn(str(e))
+            rospy.logwarn(str(particle_prob))
         return np.array((dist, align))
         # weighted_particles = particles[:2] * np.tile(particle_prob, (2, 1))
         # out = np.sum(weighted_particles, axis=1) / np.sum(particle_prob)
