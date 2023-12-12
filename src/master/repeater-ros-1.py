@@ -272,6 +272,7 @@ class ActionServer():
         self.map_transitions = []
         self.last_closest_idx = 0
         self.map_alignments = []
+        self.map_times = []
 
         map_loader = threading.Thread(target=load_map, args=(goal.mapName, self.map_images, self.map_distances,
                                                              self.map_transitions, self.map_times, self.map_alignments))

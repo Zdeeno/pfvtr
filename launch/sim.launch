@@ -2,7 +2,7 @@
 
     <!-- You should edit these parameters to point to your topics -->
 
-    <arg name="camera_topic" default="/image_proc_resize/image" doc="Camera topic name" />
+    <arg name="camera_topic" default="/cam_repub" doc="Camera topic name" />
     <arg name="cmd_vel_pub" default="/bluetooth_teleop/cmd_vel" doc="The topic that cmd_vel messages will be published on when replaying a map (can be the same as cmd_vel_sub)" />
     <arg name="cmd_vel_sub" default="/bluetooth_teleop/cmd_vel" doc="The topic that cmd_vel messages will be recorded from when making a map (can be the same as cmd_vel_pub)" />
     <arg name="odom_topic" default="/robot1/odometry" doc="The topic that odometry information will be read from" />

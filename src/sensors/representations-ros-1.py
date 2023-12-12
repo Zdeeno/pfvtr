@@ -11,6 +11,7 @@ from sensor_msgs.msg import Image
 from pfvtr.msg import FeaturesList, ImageList, Features, SensorsInput, Histogram
 import ros_numpy
 import numpy as np
+from copy import copy
 
 
 # Network hyperparameters
@@ -58,7 +59,7 @@ class RepresentationMatching:
         img_msg, _ = self.parse_camera_msg(image)
         msg = ImageList([img_msg])
         live_feature = self.align_abs._to_feature(msg)
-        tmp_sns_in = self.sns_in_msg
+        tmp_sns_in = copy(self.sns_in_msg)
 
         if self.last_live is None:
             self.last_live = live_feature[0]

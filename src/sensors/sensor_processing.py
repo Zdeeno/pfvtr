@@ -245,11 +245,7 @@ class PF2D(SensorFusion):
             # Monte carlo sampling of transitions
             trans = -self._sample_hist(map_trans[map_idx])
             trans_per_particle = trans[closest_transition.squeeze(), np.arange(particles_in_map)].transpose()
-            try:
-                frac_per_particle = traveled_fracs[closest_transition]
-            except Exception as e:
-                rospy.logwarn(e)
-                rospy.logwarn(str(traveled_fracs) + " : " + str(time_diffs[map_idx]) + " : "  + str(curr_time_diff) + " : " + str(timestamps))
+            frac_per_particle = traveled_fracs[closest_transition]
             # generate new particles
             out = []
             # rolls = np.random.rand(self.particles.shape[1])
@@ -444,11 +440,13 @@ class PF2D(SensorFusion):
         p_num = np.sum(mask)
         if p_num < 50:
             rospy.logwarn("Only " + str(p_num) + " particles used for alignment estimate - could be very noisy")
-        try:
-            align = np.sum(particles[1, mask] * particle_prob[mask]) / np.sum(particle_prob[mask])
-        except Exception as e:
-            rospy.logwarn(str(e))
-            rospy.logwarn(str(particle_prob))
+        if np.isnan(particle_prob).any() or np.isnan(particles).any() or np.sum(particle_prob[mask]) == 0.0:
+            rospy.logwarn("Somehow NaN in particles or probs!")
+            rospy.logwarn(str(particle_prob[mask]))
+            rospy.logwarn(str(particles))
+            rospy.logwarn(str(np.sum(particle_prob[mask])))
+            return np.array((dist, self.alignment))
+        align = np.sum(particles[1, mask] * particle_prob[mask]) / np.sum(particle_prob[mask])
         return np.array((dist, align))
         # weighted_particles = particles[:2] * np.tile(particle_prob, (2, 1))
         # out = np.sum(weighted_particles, axis=1) / np.sum(particle_prob)
