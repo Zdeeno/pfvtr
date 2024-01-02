@@ -13,7 +13,7 @@ from geometry_msgs.msg import Twist
 from std_msgs.msg import Float64
 from pfvtr.msg import MapRepeaterAction, MapRepeaterResult, SensorsInput, SensorsOutput, ImageList, FeaturesList, \
     Features, Histogram
-from pfvtr.srv import SetDist, SetClockGain, SetClockGainResponse, Alignment, Representations
+from pfvtr.srv import SetDist, SetClockGain, SetClockGainResponse, Alignment, Representations, StopRepeater, StopRepeaterResponse
 import numpy as np
 import ros_numpy
 
@@ -120,6 +120,7 @@ class ActionServer():
         rospy.wait_for_service("repeat/set_dist")
         rospy.wait_for_service("repeat/set_align")
         rospy.Service('set_clock_gain', SetClockGain, self.setClockGain)
+        rospy.Service('stop_repeater', StopRepeater, self.stopService)
 
         rospy.logdebug("Resetting distance node")
         self.distance_reset_srv = rospy.ServiceProxy("repeat/set_dist", SetDist)
@@ -144,6 +145,11 @@ class ActionServer():
     def setClockGain(self, req):
         self.clockGain = req.gain
         return SetClockGainResponse()
+
+    def stopService(self, req):
+        self.isRepeating = False
+        rospy.logwarn("Received stop request!")
+        return StopRepeaterResponse()
 
     def pubSensorsInput(self):
         # rospy.logwarn("Obtained image!")
@@ -303,7 +309,7 @@ class ActionServer():
         if self.use_distances:
             self.parse_rosbag()
             self.isRepeating = True
-            self.play_closest_action()
+            self.play_closest_action()  # first movement
         else:
             self.replay_timewise(additionalPublishers)  # for timewise repeating
 
@@ -393,12 +399,11 @@ class ActionServer():
 
     def play_closest_action(self):
         # TODO: Does not support additional topics
-        if len(self.action_dists) > 0:
-            if self.isRepeating:
-                distance_to_pos = abs(self.curr_dist - self.action_dists)
-                closest_idx = np.argmin(distance_to_pos)
-                # rospy.loginfo("replaying action at: " + str(closest_idx))
-                self.joy_pub.publish(self.actions[closest_idx])
+        if len(self.action_dists) > 0 and self.isRepeating:
+            distance_to_pos = abs(self.curr_dist - self.action_dists)
+            closest_idx = np.argmin(distance_to_pos)
+            # rospy.loginfo("replaying action at: " + str(closest_idx))
+            self.joy_pub.publish(self.actions[closest_idx])
         else:
             rospy.logwarn("No action available - stopping")
             self.align_reset_srv(0.0, 1)

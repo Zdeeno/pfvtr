@@ -80,6 +80,7 @@ add_message_files(
    SetDist.srv
    SetClockGain.srv
    Representations.srv
+   StopRepeater.srv
  )
 
 ## Generate actions in the 'action' folder
