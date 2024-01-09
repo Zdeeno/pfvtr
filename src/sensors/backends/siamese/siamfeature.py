@@ -31,7 +31,7 @@ def check_xy(horizontal, vertical, allowed_shifts, vertical_limit=50):
 class SiamFeature(DisplacementEstimator, ProbabilityDistanceEstimator,
                   AbsoluteDistanceEstimator, RepresentationsCreator):
 
-    def __init__(self, padding: int = 32, resize_w: int = 512, descriptor: str = "BRISK"):
+    def __init__(self, padding: int = 32, resize_w: int = 512, descriptor: str = "BRISK",path_to_model=None):
         super(SiamFeature, self).__init__()
         self.supported_message_type = SensorsInput
         self.descriptor = descriptor
@@ -42,8 +42,10 @@ class SiamFeature(DisplacementEstimator, ProbabilityDistanceEstimator,
         self.padding = padding
         self.resize_w = resize_w
         model = get_parametrized_model(False, 3, 16, 0, 3, self.device)
-        file_path = os.path.dirname(os.path.abspath(__file__))
-        self.model = load_model(model, os.path.join(file_path, "./model_tiny.pt")).to(self.device).float()
+        if path_to_model is None:
+            file_path = os.path.dirname(os.path.abspath(__file__))
+            path_to_model = os.path.join(file_path, "./model_tiny.pt")
+        self.model = load_model(model, path_to_model).to(self.device).float()
         self.model = self.model.eval()
 
         # if self.device == t.device("cuda"):

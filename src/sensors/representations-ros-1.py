@@ -27,13 +27,15 @@ class RepresentationMatching:
         rospy.loginfo("Sensor processing started!")
         camera_topic = rospy.get_param("~camera_topic")
         matching_type = rospy.get_param("~matching_type")
-
+        model_path = rospy.get_param("~model_path")
+        if len(model_path) == 0:
+            model_path = None
         # Choose sensor method
         self.align_abs = None
         if matching_type == "siam_f":
-            self.align_abs = SiamFeature(padding=PAD, resize_w=RESIZE_W)
+            self.align_abs = SiamFeature(padding=PAD, resize_w=RESIZE_W, path_to_model=model_path)
         if matching_type == "siam":
-            self.align_abs = SiameseCNN(padding=PAD, resize_w=RESIZE_W)
+            self.align_abs = SiameseCNN(padding=PAD, resize_w=RESIZE_W, path_to_model=model_path)
         if self.align_abs is None:
             raise Exception("Invalid matching scheme - edit launch file!")
 

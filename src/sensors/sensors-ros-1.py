@@ -54,13 +54,15 @@ if __name__ == '__main__':
     choice_beta = rospy.get_param("~choice_beta")
     add_random = rospy.get_param("~add_random")
     matching_type = rospy.get_param("~matching_type")
-
+    model_path = rospy.get_param("~model_path")
+    if len(model_path) == 0:
+        model_path = None
     # Choose sensor method
     align_abs = None
     if matching_type == "siam_f":
-        align_abs = SiamFeature(padding=PAD, resize_w=RESIZE_W)
+        align_abs = SiamFeature(padding=PAD, resize_w=RESIZE_W, path_to_model=model_path)
     if matching_type == "siam":
-        align_abs = SiameseCNN(padding=PAD, resize_w=RESIZE_W)
+        align_abs = SiameseCNN(padding=PAD, resize_w=RESIZE_W, path_to_model=model_path)
     if align_abs is None:
         raise Exception("Invalid matching scheme - edit launch file!")
     align_rel = CrossCorrelation(padding=PAD, network_division=NETWORK_DIVISION, resize_w=RESIZE_W)

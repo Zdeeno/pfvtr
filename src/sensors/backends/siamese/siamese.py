@@ -17,7 +17,7 @@ from sensor_msgs.msg import Image
 class SiameseCNN(DisplacementEstimator, ProbabilityDistanceEstimator,
                  AbsoluteDistanceEstimator, RepresentationsCreator):
 
-    def __init__(self, padding: int=32, resize_w: int=512):
+    def __init__(self, padding: int=32, resize_w: int=512, path_to_model=None):
         super(SiameseCNN, self).__init__()
         self.supported_message_type = SensorsInput
         self.device = t.device("cuda") if t.cuda.is_available() else t.device("cpu")
@@ -27,8 +27,10 @@ class SiameseCNN(DisplacementEstimator, ProbabilityDistanceEstimator,
         self.padding = padding
         self.resize_w = resize_w
         model = get_parametrized_model(False, 3, 16, 0, 3, self.device)
-        file_path = os.path.dirname(os.path.abspath(__file__))
-        self.model = load_model(model, os.path.join(file_path, "./model_tiny.pt")).to(self.device).float()
+        if path_to_model is None:
+            file_path = os.path.dirname(os.path.abspath(__file__))
+            path_to_model = os.path.join(file_path, "./model_tiny.pt")
+        self.model = load_model(model, path_to_model).to(self.device).float()
         self.model = self.model.eval()
 
         # if self.device == t.device("cuda"):
