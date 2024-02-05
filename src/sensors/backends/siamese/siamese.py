@@ -22,6 +22,7 @@ class SiameseCNN(DisplacementEstimator, ProbabilityDistanceEstimator,
         self.supported_message_type = SensorsInput
         self.device = t.device("cuda") if t.cuda.is_available() else t.device("cpu")
         rospy.logwarn("Neural net device " + str(self.device))
+        self.interpolate = interpolate
         
         # init neural network
         self.padding = padding
@@ -83,15 +84,21 @@ class SiameseCNN(DisplacementEstimator, ProbabilityDistanceEstimator,
         return True
 
     def process_msg(self, msg):
-        hist = self.forward(msg.map_features, msg.live_features)
-        f = interpolate.interp1d(np.linspace(0, self.resize_w, hist.shape[-1]), hist, kind="cubic")
-        interp_hist = f(np.arange(0, self.resize_w))
-        self.distances_probs = np.max(interp_hist, axis=1)
+        hists = self.forward(msg.map_features, msg.live_features)
         ret = []
-        for hist in interp_hist:
-            zeros = np.zeros(np.size(hist)//2)
-            ret.append(np.concatenate([zeros, hist, zeros]))    # siam can do only -0.5 to 0.5 img so extend both sides by sth
-        self.histograms = ret
+        if interpolate:
+            f = interpolate.interp1d(np.linspace(0, self.resize_w, hists.shape[-1]), hists, kind="cubic")
+            interp_hist = f(np.arange(0, self.resize_w))
+            self.distances_probs = np.max(interp_hist, axis=1)
+            for hist in interp_hist:
+                zeros = np.zeros(np.size(hist)//2)
+                ret.append(np.concatenate([zeros, hist, zeros]))    # siam can do only -0.5 to 0.5 img so extend both sides by sth
+            self.histograms = ret
+        else:
+            self.distances_probs = np.max(hists, axis=1)
+            for hist in hists:
+                ret.append(hist)
+            self.histograms = ret
         return ret
 
     def forward(self, map_features, live_features):
