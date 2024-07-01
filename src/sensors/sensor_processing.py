@@ -2,7 +2,7 @@ import numpy as np
 from base_classes import DisplacementEstimator, RelativeDistanceEstimator, AbsoluteDistanceEstimator, \
     SensorFusion, ProbabilityDistanceEstimator, RepresentationsCreator
 import rospy
-from src.sensors.backends.nn_policy.model import PolicyNet
+from backends.nn_policy.model import PolicyNet
 from pfvtr.srv import Alignment, AlignmentResponse, SetDist, SetDistResponse
 from pfvtr.msg import FloatList, SensorsInput, ImageList
 from scipy import interpolate
@@ -465,13 +465,19 @@ class PF2D(SensorFusion):
 
 class NNPolicy(SensorFusion):
 
-    def __init__(self, type_prefix: str,
-                 abs_align_est: DisplacementEstimator, abs_dist_est: AbsoluteDistanceEstimator,
-                 repr_creator: RepresentationsCreator, rel_align_est: DisplacementEstimator):
-        super().__init__(type_prefix, abs_align_est=abs_align_est, abs_dist_est=abs_dist_est,
-                         rel_align_est=rel_align_est, repr_creator=repr_creator)
+    def __init__(self, type_prefix: str, min_control_dist: float,
+                 abs_align_est: DisplacementEstimator, rel_align_est: DisplacementEstimator,
+                 rel_dist_est: RelativeDistanceEstimator, repr_creator: RepresentationsCreator):
+        super(NNPolicy, self).__init__(type_prefix, abs_align_est=abs_align_est,
+                                       rel_align_est=rel_align_est, rel_dist_est=rel_dist_est,
+                                       repr_creator=repr_creator)
+        self.device = t.device("cuda") if t.cuda.is_available() else t.device("cpu")
+        self.net = PolicyNet(device=self.device)
+        self.min_control_dist = 0.1
+        self.last_time = None
+        self.map_num = 1
+        self.input_size = 5
         self.dist_span = 8
-        self.net = PolicyNet()
 
 
     def _process_rel_alignment(self, msg):
@@ -508,7 +514,6 @@ class NNPolicy(SensorFusion):
         hists = [hists[len_per_map * map_idx:len_per_map * (map_idx + 1)] for map_idx in range(self.map_num)]
         dists = np.array([dists[len_per_map * map_idx:len_per_map * (map_idx + 1)] for map_idx in range(self.map_num)])
         timestamps = [timestamps[len_per_map * map_idx:len_per_map * (map_idx + 1)] for map_idx in range(self.map_num)]
-        time_diffs = [self._get_time_diff(timestamps[map_idx]) for map_idx in range(self.map_num)]
 
         in_diff = self.input_size - hists[0].shape[0]
         if in_diff > 0:
@@ -529,8 +534,10 @@ class NNPolicy(SensorFusion):
 
         obs = t.cat([img_data, img_pos]).float()
         action = self.net.get_action(obs)
-        self.distance -= action[1].cpu().detach().numpy()
-        self.alignment = action[0].cpu().detach().numpy()
+        rospy.logwarn("NN output: " + str(action["action"]))
+        self.distance -= action["action"][0, 1].cpu().detach().numpy()
+        self.alignment = action["action"][0, 0].cpu().detach().numpy()
+        self.last_time = curr_time
 
     def process_distance(self, img_dists):
         center = int((self.dist_span * 10) / 2.0)
@@ -565,8 +572,9 @@ class NNPolicy(SensorFusion):
         return resized_x
 
     def _process_rel_distance(self, msg):
-        rospy.logerr("This function is not available for this fusion class")
-        raise Exception("Bearnav Classic does not support relative distance")
+        # only increment the distance
+        dist = self.rel_dist_est.rel_dist_message_callback(msg)
+        self.distance += dist
 
     def _process_abs_distance(self, msg):
         rospy.logwarn("This function is not available for this fusion class")

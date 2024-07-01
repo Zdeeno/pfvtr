@@ -2,7 +2,7 @@
 
 import rospy
 from pfvtr.srv import Alignment, AlignmentResponse, Representations, RepresentationsResponse
-from sensor_processing import BearnavClassic, PF2D, VisualOnly
+from sensor_processing import BearnavClassic, PF2D, VisualOnly, NNPolicy
 from backends.odometry.odom_dist import OdometryAbsolute, OdometryRelative
 from backends.siamese.siamese import SiameseCNN
 from backends.siamese.siamfeature import SiamFeature
@@ -95,5 +95,12 @@ if __name__ == '__main__':
     # repeat_handler = start_subscribes(repeat_fusion,
     #                                   "matched_repr", "", "", "sensors_input",
     #                                   "", "")
+    # 4) Neural network policy
+    # repeat_fusion = NNPolicy(type_prefix="repeat", min_control_dist=0.1,
+    #                          abs_align_est=align_abs, rel_align_est=align_rel, rel_dist_est=dist_rel,
+    #                          repr_creator=align_abs)
+    # repeat_handlers = start_subscribes(repeat_fusion,
+    #                                    "matched_repr", "", odom_topic, "",
+    #                                    "local_alignment", "")
 
     rospy.spin()

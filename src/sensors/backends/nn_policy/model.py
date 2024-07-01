@@ -46,8 +46,8 @@ class PPOActorSimple(t.nn.Module):
 
 class PolicyNet:
 
-    def __init__(self):
-        self.device = t.device('cuda' if t.cuda.is_available() else 'cpu')
+    def __init__(self, device=t.device("cpu")):
+        self.device = device
         actor_net = PPOActorSimple(2, hidden_size=1024).float().to(self.device)
         HOME = os.path.expanduser('~')
         SAVE_DIR = HOME + "/.ros/models/"
@@ -74,12 +74,12 @@ class PolicyNet:
             return_log_prob=True,
             default_interaction_type=tensordict.nn.InteractionType.MEAN,
             # we'll need the log-prob for the numerator of the importance weights
-        )
+        ).to(device)
 
     def get_action(self, obs):
-        net_in = TensorDict({"observation": obs.unsqueeze(0),
+        net_in = TensorDict({"observation": obs.unsqueeze(0).to(self.device),
                              "reward": t.tensor([0.0], device=self.device).unsqueeze(0).float(),
-                             "done": t.tensor([self.finished], device=self.device).unsqueeze(0)},
+                             "done": t.tensor([False], device=self.device).unsqueeze(0)},
                             batch_size=[1])
         with set_exploration_type(ExplorationType.MEAN), t.no_grad():
             action = self.policy_module.forward(net_in)
