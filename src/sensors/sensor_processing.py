@@ -104,6 +104,8 @@ class PF2D(SensorFusion):
         self.zero_dim = False
         self.one_dim = False
         self.use_map_trans = False
+        self.fallback_bearnav = False
+        self.init_distance = 0.0
         self.rng = np.random.default_rng()
 
         self.odom_error = odom_error
@@ -137,9 +139,11 @@ class PF2D(SensorFusion):
             self.particles_pub = rospy.Publisher("particles", FloatList, queue_size=1)
 
     def set_distance(self, msg: SetDist) -> SetDistResponse:
+        self.fallback_bearnav = False
         ret = super(PF2D, self).set_distance(msg)
         var = (self.odom_init_std, self.align_init_std, 0)
         dst = self.distance
+        self.init_distance = self.distance
         self.particles = np.transpose(np.ones((3, self.particles_num)).transpose() * np.array((dst, 0, 0)) + \
                                       self.rng.normal(loc=(0, 0, 0), scale=var, size=(self.particles_num, 3)))
         # self.particles = self.particles - np.mean(self.particles, axis=-1, keepdims=True)
@@ -184,6 +188,21 @@ class PF2D(SensorFusion):
         if self.last_time is None:
             self.last_time = curr_time
             return
+
+        dists = np.array(msg.map_distances)
+        len_per_map = np.size(dists) // self.map_num
+
+        if len_per_map == 1:
+            rospy.logerr("!!!Only one image matched - fallback to bearnav classic!!!")
+            self.fallback_bearnav = True
+            # self.distance = self.init_distance
+
+        if self.fallback_bearnav:
+            histogram = np.array(msg.map_histograms[0].values).reshape(msg.map_histograms[0].shape)
+            self.alignment = (np.argmax(histogram) - np.size(histogram) // 2) / (np.size(histogram) // 2)
+            rospy.loginfo("Fallback displacement: " + str(self.alignment))
+            return
+
         hists = np.array(msg.map_histograms[0].values).reshape(msg.map_histograms[0].shape)
         self.last_hists = hists
         map_trans = np.array(msg.map_transitions[0].values).reshape(msg.map_transitions[0].shape)
@@ -193,12 +212,10 @@ class PF2D(SensorFusion):
         hists = np.roll(hists, shifts, -1)  # not sure if last dim should be rolled like this
         curr_img_diff = self._sample_hist([live_hist])
         curr_time_diff = (curr_time - self.last_time).to_sec()
-        dists = np.array(msg.map_distances)
         timestamps = msg.map_timestamps
         traveled = self.traveled_dist
 
         # Divide incoming data according the map affiliation
-        len_per_map = np.size(dists) // self.map_num
         trans_per_map = len_per_map - 1
         if len(dists) % msg.map_num > 0:
             # TODO: this assumes that there is same number of features comming from all the maps (this does not have to hold when 2*map_len < lookaround)
@@ -355,9 +372,12 @@ class PF2D(SensorFusion):
         # only increment the distance
         dist = self.rel_dist_est.rel_dist_message_callback(msg)
         if dist is not None and dist >= 0.005:
-            self.particles[0] += dist
-            self._get_coords()
-            self.traveled_dist += dist
+            if self.fallback_bearnav:
+                self.distance += dist
+            else:
+                self.particles[0] += dist
+                self._get_coords()
+                self.traveled_dist += dist
 
     def _process_abs_distance(self, msg):
         rospy.logwarn("This function is not available for this fusion class")
