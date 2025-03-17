@@ -2,9 +2,11 @@ import numpy as np
 from base_classes import DisplacementEstimator, RelativeDistanceEstimator, AbsoluteDistanceEstimator, \
     SensorFusion, ProbabilityDistanceEstimator, RepresentationsCreator
 import rospy
+from backends.nn_policy.model import PolicyNet
 from pfvtr.srv import Alignment, AlignmentResponse, SetDist, SetDistResponse
 from pfvtr.msg import FloatList, SensorsInput, ImageList
 from scipy import interpolate
+import torch as t
 
 """
 Here should be placed all classes for fusion of sensor processing
@@ -102,6 +104,8 @@ class PF2D(SensorFusion):
         self.zero_dim = False
         self.one_dim = False
         self.use_map_trans = False
+        self.fallback_bearnav = False
+        self.init_distance = 0.0
         self.rng = np.random.default_rng()
 
         self.odom_error = odom_error
@@ -135,9 +139,11 @@ class PF2D(SensorFusion):
             self.particles_pub = rospy.Publisher("particles", FloatList, queue_size=1)
 
     def set_distance(self, msg: SetDist) -> SetDistResponse:
+        self.fallback_bearnav = False
         ret = super(PF2D, self).set_distance(msg)
         var = (self.odom_init_std, self.align_init_std, 0)
         dst = self.distance
+        self.init_distance = self.distance
         self.particles = np.transpose(np.ones((3, self.particles_num)).transpose() * np.array((dst, 0, 0)) + \
                                       self.rng.normal(loc=(0, 0, 0), scale=var, size=(self.particles_num, 3)))
         # self.particles = self.particles - np.mean(self.particles, axis=-1, keepdims=True)
@@ -182,6 +188,21 @@ class PF2D(SensorFusion):
         if self.last_time is None:
             self.last_time = curr_time
             return
+
+        dists = np.array(msg.map_distances)
+        len_per_map = np.size(dists) // self.map_num
+
+        if len_per_map == 1:
+            rospy.logerr("!!!Only one image matched - fallback to bearnav classic!!!")
+            self.fallback_bearnav = True
+            # self.distance = self.init_distance
+
+        if self.fallback_bearnav:
+            histogram = np.array(msg.map_histograms[0].values).reshape(msg.map_histograms[0].shape)
+            self.alignment = (np.argmax(histogram) - np.size(histogram) // 2) / (np.size(histogram) // 2)
+            rospy.loginfo("Fallback displacement: " + str(self.alignment))
+            return
+
         hists = np.array(msg.map_histograms[0].values).reshape(msg.map_histograms[0].shape)
         self.last_hists = hists
         map_trans = np.array(msg.map_transitions[0].values).reshape(msg.map_transitions[0].shape)
@@ -191,12 +212,10 @@ class PF2D(SensorFusion):
         hists = np.roll(hists, shifts, -1)  # not sure if last dim should be rolled like this
         curr_img_diff = self._sample_hist([live_hist])
         curr_time_diff = (curr_time - self.last_time).to_sec()
-        dists = np.array(msg.map_distances)
         timestamps = msg.map_timestamps
         traveled = self.traveled_dist
 
         # Divide incoming data according the map affiliation
-        len_per_map = np.size(dists) // self.map_num
         trans_per_map = len_per_map - 1
         if len(dists) % msg.map_num > 0:
             # TODO: this assumes that there is same number of features comming from all the maps (this does not have to hold when 2*map_len < lookaround)
@@ -353,9 +372,12 @@ class PF2D(SensorFusion):
         # only increment the distance
         dist = self.rel_dist_est.rel_dist_message_callback(msg)
         if dist is not None and dist >= 0.005:
-            self.particles[0] += dist
-            self._get_coords()
-            self.traveled_dist += dist
+            if self.fallback_bearnav:
+                self.distance += dist
+            else:
+                self.particles[0] += dist
+                self._get_coords()
+                self.traveled_dist += dist
 
     def _process_abs_distance(self, msg):
         rospy.logwarn("This function is not available for this fusion class")
@@ -459,3 +481,125 @@ class PF2D(SensorFusion):
 
     def _get_median_pos(self):
         return np.median(self.particles, axis=1)
+
+
+class NNPolicy(SensorFusion):
+
+    def __init__(self, type_prefix: str, min_control_dist: float,
+                 abs_align_est: DisplacementEstimator, rel_align_est: DisplacementEstimator,
+                 rel_dist_est: RelativeDistanceEstimator, repr_creator: RepresentationsCreator):
+        super(NNPolicy, self).__init__(type_prefix, abs_align_est=abs_align_est,
+                                       rel_align_est=rel_align_est, rel_dist_est=rel_dist_est,
+                                       repr_creator=repr_creator)
+        self.device = t.device("cuda") if t.cuda.is_available() else t.device("cpu")
+        self.net = PolicyNet(device=self.device)
+        self.min_control_dist = 0.1
+        self.last_time = None
+        self.map_num = 1
+        self.input_size = 5
+        self.dist_span = 8
+
+
+    def _process_rel_alignment(self, msg):
+        histogram = self.rel_align_est.displacement_message_callback(msg.input)
+        out = AlignmentResponse()
+        out.histograms = histogram
+        return out
+
+    def _process_abs_alignment(self, msg):
+        curr_time = msg.header.stamp
+        self.header = msg.header
+        if self.last_time is None:
+            self.last_time = curr_time
+            return
+        hists = np.array(msg.map_histograms[0].values).reshape(msg.map_histograms[0].shape)
+        self.last_hists = hists
+        map_trans = np.array(msg.map_transitions[0].values).reshape(msg.map_transitions[0].shape)
+        live_hist = np.array(msg.live_histograms[0].values).reshape(msg.live_histograms[0].shape)
+        hist_width = hists.shape[-1]
+        shifts = np.round(np.array(msg.map_offset) * (hist_width // 2)).astype(int)
+        hists = np.roll(hists, shifts, -1)  # not sure if last dim should be rolled like this
+        dists = np.array(msg.map_distances)
+        timestamps = msg.map_timestamps
+
+        # Divide incoming data according the map affiliation
+        len_per_map = np.size(dists) // self.map_num
+        trans_per_map = len_per_map - 1
+        if len(dists) % msg.map_num > 0:
+            # TODO: this assumes that there is same number of features comming from all the maps (this does not have to hold when 2*map_len < lookaround)
+            rospy.logwarn("!!!!!!!!!!!!!!!!!! One map has more images than other !!!!!!!!!!!!!!!!")
+            return
+        map_trans = [map_trans[trans_per_map * map_idx:trans_per_map * (map_idx + 1)] for map_idx in
+                     range(self.map_num)]
+        hists = [hists[len_per_map * map_idx:len_per_map * (map_idx + 1)] for map_idx in range(self.map_num)]
+        dists = np.array([dists[len_per_map * map_idx:len_per_map * (map_idx + 1)] for map_idx in range(self.map_num)])
+        timestamps = [timestamps[len_per_map * map_idx:len_per_map * (map_idx + 1)] for map_idx in range(self.map_num)]
+
+        in_diff = self.input_size - hists[0].shape[0]
+        if in_diff > 0:
+            in_append = np.zeros((in_diff, 1024))
+            if dists[0][0] < 2.0:
+                out_hists = np.concatenate((in_append, hists[0]), axis=0)
+                out_map_trans = np.concatenate((in_append, map_trans[0]), axis=0)
+            else:
+                out_hists = np.concatenate((hists[0], in_append), axis=0)
+                out_map_trans = np.concatenate((map_trans[0], in_append), axis=0)
+        else:
+            out_hists = hists[0]
+            out_map_trans = map_trans[0]
+        # self.data = (dists, out_hists, out_map_trans, np.expand_dims(live_hist, axis=0))
+        data = (dists, out_hists, out_map_trans)
+        img_data = self.parse_hists(data[1:])
+        img_pos = self.process_distance(data[0])
+
+        obs = t.cat([img_data, img_pos]).float()
+        action = self.net.get_action(obs)
+        rospy.logwarn("NN output: " + str(action["action"]))
+        self.distance -= action["action"][0, 1].cpu().detach().numpy()
+        self.alignment = action["action"][0, 0].cpu().detach().numpy()
+        self.last_time = curr_time
+
+    def process_distance(self, img_dists):
+        center = int((self.dist_span * 10) / 2.0)
+
+        # GET IMG POS
+        imgs_pos = t.zeros(self.dist_span * 10 + 1, device=self.device)
+        img_dist_idxs = np.round((self.distance - img_dists) * 10)
+        for index_diff in img_dist_idxs[0]:
+            if abs(index_diff) < center:
+                imgs_pos[int(index_diff) + center] = 0.2
+
+        return imgs_pos
+
+    def parse_hists(self, obs):
+        cat_tesnors = []
+        # max_map_img = t.argmax(t.max(t.tensor(obs[0]), dim=1)[0])
+        # rospy.logwarn("MAX MAP: " + str(max_map_img))
+        for n_obs in obs:
+            flat_tensor = t.tensor(n_obs[:, 256:-256], device=self.device).flatten()
+            flat_tensor = self.resize_histogram(flat_tensor)
+            norm_flat_tesnsor = (flat_tensor - t.mean(flat_tensor)) / t.std(flat_tensor)
+            cat_tesnors.append(norm_flat_tesnsor.squeeze(0))
+        new_obs = t.cat(cat_tesnors, dim=0).float()
+        return new_obs
+
+
+    def resize_histogram(self, x):
+        # RESIZE BY FACTOR of 8
+        reshaped_x = x.view(1, -1, 8)
+        # Sum along the second dimension to aggregate every 8 bins into one
+        resized_x = reshaped_x.sum(dim=2)
+        return resized_x
+
+    def _process_rel_distance(self, msg):
+        # only increment the distance
+        dist = self.rel_dist_est.rel_dist_message_callback(msg)
+        self.distance += dist
+
+    def _process_abs_distance(self, msg):
+        rospy.logwarn("This function is not available for this fusion class")
+        raise Exception("NNPolicy does not support absolute distance")
+
+    def _process_prob_distance(self, msg):
+        rospy.logerr("This function is not available for this fusion class")
+        raise Exception("NNPolicy does not support probability of distances")
