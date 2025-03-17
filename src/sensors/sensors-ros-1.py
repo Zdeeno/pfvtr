@@ -22,7 +22,7 @@ def start_subscribes(fusion_class,
     # subscribers for images and other topics used for alignment and distance estimation
     if fusion_class.abs_align_est is not None and len(abs_align_topic) > 0:
         rospy.Subscriber(abs_align_topic, fusion_class.abs_align_est.supported_message_type,
-                         fusion_class.process_abs_alignment, queue_size=1, buff_size=50000000)
+                         fusion_class.process_abs_alignment, queue_size=1, buff_size=20000000)
     if fusion_class.abs_dist_est is not None and len(abs_dist_topic) > 0:
         rospy.Subscriber(abs_dist_topic, fusion_class.abs_dist_est.supported_message_type,
                          fusion_class.process_abs_distance, queue_size=1)

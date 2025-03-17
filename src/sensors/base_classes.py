@@ -218,8 +218,8 @@ class SensorFusion(ABC):
         self.rel_align_est = rel_align_est
         self.repr_creator = repr_creator
 
-        self.t_dist = rospy.Timer(rospy.Duration(0.05), self.publish_dist)
-        self.t_align = rospy.Timer(rospy.Duration(0.05), self.publish_align)
+        self.t_dist = rospy.Timer(rospy.Duration(0.025), self.publish_dist)
+        self.t_align = rospy.Timer(rospy.Duration(0.025), self.publish_align)
     
     def publish_dist(self, timer):
         """

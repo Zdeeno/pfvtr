@@ -59,7 +59,7 @@ def callback(msg):
 if __name__ == "__main__":
     
     rospy.init_node("pf_viz")
-    pub = rospy.Publisher("pf_viz", Image, queue_size=0)
-    rospy.Subscriber("/pfvtr/particles", FloatList, callback)
+    pub = rospy.Publisher("pf_viz", Image, queue_size=1)
+    rospy.Subscriber("/pfvtr/particles", FloatList, callback, queue_size=1)
     print("PF viz ready...")
     rospy.spin()

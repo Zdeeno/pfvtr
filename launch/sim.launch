@@ -12,15 +12,15 @@
     <!-- You should not need to edit anything below this line. -->
 
     <arg name="particle_num" default="600" doc="Number of particles" />
-    <arg name="odom_error" default="0.05" doc="Percentual odometry inaccuracy" />
+    <arg name="odom_error" default="0.025" doc="Percentual odometry inaccuracy" />
     <arg name="dist_init_std" default="1.0" doc="Standart deviation for particle initial spawn in distance dimension" />
-    <arg name="align_beta" default="30.0" doc="Scaling factor of individual histograms" />
-    <arg name="align_init_std" default="0.3" doc="Standart deviation for particle initial spawn in displacement dimension" />
-    <arg name="add_random" default="0.1" doc="Percentage of randomly (uniformly) spawned particles each timestep" />
+    <arg name="align_beta" default="10.0" doc="Scaling factor of individual histograms" />
+    <arg name="align_init_std" default="1.0" doc="Standart deviation for particle initial spawn in displacement dimension" />
+    <arg name="add_random" default="0.01" doc="Percentage of randomly (uniformly) spawned particles each timestep" />
     <arg name="model_path" default="" doc="Path to the folder with models. If empty default tiny model is used." />
     <!-- Tunable parameters -->
 
-    <arg name="choice_beta" default="3.0" doc="Scaling factor for likelihoods of individual particles - higher value makes filtering to choose only particles with high likelihoods. Effectively, higher the value the more is used visual feedback and less odometry. We suggest 1.5-2.0 for large outdoor environments and 3.0 for indoor." />
+    <arg name="choice_beta" default="2.5" doc="Scaling factor for likelihoods of individual particles - higher value makes filtering to choose only particles with high likelihoods. Effectively, higher the value the more is used visual feedback and less odometry. We suggest 1.5-2.0 for large outdoor environments and 3.0 for indoor." />
     <arg name="matching_type" default="siam" doc="representation matching scheme - use siam or siam_f" />
 
 	<group ns="pfvtr">
