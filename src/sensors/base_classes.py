@@ -4,6 +4,7 @@ from std_msgs.msg import Float32
 from pfvtr.msg import SensorsOutput, ImageList, Features
 import rospy
 from pfvtr.srv import SetDist, SetDistResponse, Representations, RepresentationsResponse
+from pfvtr.msg import FloatList
 from typing import List
 
 
@@ -179,7 +180,42 @@ class RepresentationsCreator(ABC):
     def health_check(self) -> bool:
         raise NotImplementedError
 
+# maximsimon
+class DepthSensorProcessing(ABC):
+    """
+    Abstract method for proccessing data from a depth sensor
+    """
+    
+    def __init__(self):
+	# these variables are set in concrete instance of this class (subscribers, parameters, results ...)
+        self.depth_data_raw = None
+        self.depth_data_processed = None
+        self.depth_sensor_max_range = None
+        self.depth_sensor_min_range = None
+        self.depth_data_pub = rospy.Publisher("/depth_senosor_data", FloatList, queue_size=1)
+        self.timer_depth = rospy.Timer(rospy.Duration(0.025), self.publish_depth_data)
+ 
+    @abstractmethod
+    def callback(self, msg) -> None:	# callback for fetching data from topic (subscriber callback)
+        raise NotImplementedError
 
+    @abstractmethod
+    def process_data(self) -> bool:	# i use it to cut the unwanted rays from the lidar's laserscan and to set the 1-5 meters (normalizaton and stuff)
+        raise NotImplementedError
+    
+    @abstractmethod
+    def get_closest_obstacle(self) -> list[float]:	# return angle and distance of the closest obstacle, -1 if no obstacles detected -> [distance of closest obstacle, angle of ray that detected it]
+        raise NotImplementedError
+        
+    def publish_depth_data(self, timer):
+        """
+        publish data from depth sensor as a list[float] - we need always header for time synchronization!
+        """
+        msg = FloatList()
+        msg.data = self.depth_data_processed
+        self.depth_data_pub.publish(msg)
+        print("publish depth data:", msg.data)
+	
 class SensorFusion(ABC):
     """
     Abstract method for the sensor fusion!

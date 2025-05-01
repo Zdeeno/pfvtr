@@ -3,6 +3,7 @@
 import rospy
 from pfvtr.srv import Alignment, AlignmentResponse, Representations, RepresentationsResponse
 from sensor_processing import BearnavClassic, PF2D, VisualOnly
+from lidar_processing import LidarProcessing
 from backends.odometry.odom_dist import OdometryAbsolute, OdometryRelative
 from backends.siamese.siamese import SiameseCNN
 from backends.siamese.siamfeature import SiamFeature
@@ -106,4 +107,4 @@ class RepresentationMatching:
 
 
 if __name__ == '__main__':
-    r = RepresentationMatching()
+   r = RepresentationMatching()

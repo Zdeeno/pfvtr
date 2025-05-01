@@ -552,7 +552,7 @@ class NNPolicy(SensorFusion):
         img_data = self.parse_hists(data[1:])
         img_pos = self.process_distance(data[0])
 
-        obs = t.cat([img_data, img_pos]).float()
+        obs = t.cat([img_data, img_pos]).float()		# final observation array
         action = self.net.get_action(obs)
         rospy.logwarn("NN output: " + str(action["action"]))
         self.distance -= action["action"][0, 1].cpu().detach().numpy()

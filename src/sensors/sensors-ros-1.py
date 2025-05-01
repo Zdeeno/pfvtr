@@ -83,24 +83,24 @@ if __name__ == '__main__':
     #                                    "matched_repr", odom_topic, "", "",
     #                                    "", "")
     # 2) Particle filter 2D - parameters are really important
-    repeat_fusion = PF2D(type_prefix="repeat", particles_num=particle_num, odom_error=odom_error, odom_init_std=dist_init_std, align_beta=align_beta,
-                         align_init_std=align_init_std, particles_frac=1, choice_beta=choice_beta, add_random=add_random, debug=True,
-                         abs_align_est=align_abs, rel_align_est=align_rel, rel_dist_est=dist_rel,
-                         repr_creator=align_abs)
-    repeat_handlers = start_subscribes(repeat_fusion,
-                                       "matched_repr", "", odom_topic, "",
-                                       "local_alignment", "")
+    # repeat_fusion = PF2D(type_prefix="repeat", particles_num=particle_num, odom_error=odom_error, odom_init_std=dist_init_std, align_beta=align_beta,
+    #                      align_init_std=align_init_std, particles_frac=1, choice_beta=choice_beta, add_random=add_random, debug=True,
+    #                      abs_align_est=align_abs, rel_align_est=align_rel, rel_dist_est=dist_rel,
+    #                      repr_creator=align_abs)
+    # repeat_handlers = start_subscribes(repeat_fusion,
+    #                                   "matched_repr", "", odom_topic, "",
+    #                                   "local_alignment", "")
     # 3) Visual Only
     # repeat_fusion = VisualOnly("repeat", align_abs, align_abs, align_abs)
     # repeat_handler = start_subscribes(repeat_fusion,
     #                                   "matched_repr", "", "", "sensors_input",
     #                                   "", "")
     # 4) Neural network policy
-    # repeat_fusion = NNPolicy(type_prefix="repeat", min_control_dist=0.1,
-    #                          abs_align_est=align_abs, rel_align_est=align_rel, rel_dist_est=dist_rel,
-    #                          repr_creator=align_abs)
-    # repeat_handlers = start_subscribes(repeat_fusion,
-    #                                    "matched_repr", "", odom_topic, "",
-    #                                    "local_alignment", "")
+    repeat_fusion = NNPolicy(type_prefix="repeat", min_control_dist=0.1,
+                             abs_align_est=align_abs, rel_align_est=align_rel, rel_dist_est=dist_rel,
+                             repr_creator=align_abs)
+    repeat_handlers = start_subscribes(repeat_fusion,
+                                       "matched_repr", "", odom_topic, "",
+                                       "local_alignment", "")
 
     rospy.spin()
