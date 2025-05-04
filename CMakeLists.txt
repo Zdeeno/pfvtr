@@ -71,6 +71,8 @@ add_message_files(
     Descriptor.msg
     Histogram.msg
     HistogramList.msg
+    LidarProcessed.msg
+
     )
 
 ## Generate services in the 'srv' folder
@@ -81,6 +83,7 @@ add_message_files(
    SetClockGain.srv
    Representations.srv
    StopRepeater.srv
+   FetchFov.srv
  )
 
 ## Generate actions in the 'action' folder
