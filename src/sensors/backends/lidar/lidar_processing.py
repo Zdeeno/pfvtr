@@ -23,8 +23,8 @@ class LidarProcessing(DepthSensorProcessing):
 		self.lidar_pub = rospy.Publisher("/lidar_processed", LidarProcessed, queue_size=1)
 		self.depth_sensor_max_range = rospy.get_param("~depth_sensor_max_range")
 		self.depth_sensor_min_range = rospy.get_param("~depth_sensor_min_range")
-		self.fov = 360								# fov = field of view of depth sensor - different for each episode, 360 (full; view) is default
-		self.fov_service = rospy.Service("fetch_fov", FetchFov, self.fetch_fov)	
+		# self.fov = 360								# fov = field of view of depth sensor - different for each episode, 360 (full; view) is default
+		# self.fov_service = rospy.Service("fetch_fov", FetchFov, self.fetch_fov)	
 		rospy.spin()
 
 	def callback(self, msg_in) -> None:
@@ -38,8 +38,8 @@ class LidarProcessing(DepthSensorProcessing):
 		self.lidar_pub.publish(msg_out)	
 
 	def process_data(self) -> None:				# cut desired fov and map values to desired range			
-		depth_data_cutout = self.cutout_fov()
-		self.depth_data_processed = self.normalize_it(depth_data_cutout)	
+		# depth_data_cutout = self.cutout_fov()
+		self.depth_data_processed = self.normalize_it(self.depth_data_raw.ranges)	
 		 
 	def cutout_fov(self) -> list[float]:			# fov (field of view) is angle of the final lidar cuttout
 		if self.fov < 0 or self.fov > 360:
