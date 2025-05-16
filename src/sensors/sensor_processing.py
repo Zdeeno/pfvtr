@@ -498,7 +498,20 @@ class NNPolicy(SensorFusion):
         self.map_num = 1
         self.input_size = 5
         self.dist_span = 8
+        self.lidar_data = None
+        self.has_new_lidar_obs = False
+        self.lidar_sub = rospy.Subscriber("/lidar_processed", LidarProcessed, self.lidar_callback, queue_size=1)
 
+    def lidar_callback(self, msg):
+        self.lidar_data = msg
+        self.has_new_lidar_obs = True
+
+    def get_lidar_data(self):
+        if self.lidar_data is None or self.has_new_lidar_obs is False:
+                return None
+        else:
+                self.has_new_obs = False
+                return (self.lidar_data.ranges, self.lidar_data.closest_obstacle)
 
     def _process_rel_alignment(self, msg):
         histogram = self.rel_align_est.displacement_message_callback(msg.input)
@@ -521,6 +534,8 @@ class NNPolicy(SensorFusion):
         hists = np.roll(hists, shifts, -1)  # not sure if last dim should be rolled like this
         dists = np.array(msg.map_distances)
         timestamps = msg.map_timestamps
+        
+        lidar_data = self.observation_buffer.get_lidar_data()
 
         # Divide incoming data according the map affiliation
         len_per_map = np.size(dists) // self.map_num
@@ -548,16 +563,27 @@ class NNPolicy(SensorFusion):
             out_hists = hists[0]
             out_map_trans = map_trans[0]
         # self.data = (dists, out_hists, out_map_trans, np.expand_dims(live_hist, axis=0))
+        
+        # process lidar_data 
+	depth_data = self.parse_lidar_data(lidar_data)
+
         data = (dists, out_hists, out_map_trans)
         img_data = self.parse_hists(data[1:])
         img_pos = self.process_distance(data[0])
 
-        obs = t.cat([img_data, img_pos]).float()		# final observation array
+        obs = t.cat([img_data, img_pos, depth_data]).float()                # final observation array, done: add lidar
         action = self.net.get_action(obs)
         rospy.logwarn("NN output: " + str(action["action"]))
         self.distance -= action["action"][0, 1].cpu().detach().numpy()
         self.alignment = action["action"][0, 0].cpu().detach().numpy()
         self.last_time = curr_time
+	
+    def parse_lidar_data(self, ranges):
+        if ranges is None:
+            depth_data = t.full((360,), -1, device=self.device)		# TODO: fix magic number
+        else:
+            depth_data = t.tensor(ranges[0], device=self.device)
+        return depth_data
 
     def process_distance(self, img_dists):
         center = int((self.dist_span * 10) / 2.0)

@@ -23,7 +23,7 @@ class PPOActorSimple(t.nn.Module):
         input_size += self.dist_hist_size * 2
 
         # histograms from visual data (1, 2, 5)
-        self.ff = t.nn.Sequential(t.nn.Linear(self.hist_size * 9 + self.dist_hist_size, hidden_size),
+        self.ff = t.nn.Sequential(t.nn.Linear(self.hist_size * 9 + self.dist_hist_size, hidden_size + 360),       # done: change observation space size
                                   t.nn.Tanh(),
                                   t.nn.Linear(hidden_size, hidden_size),
                                   t.nn.Tanh(),
