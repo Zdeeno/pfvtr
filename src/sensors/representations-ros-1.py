@@ -42,13 +42,12 @@ class RepresentationMatching:
 		self.pub = rospy.Publisher("live_representation", FeaturesList, queue_size=1)
 		self.pub_match = rospy.Publisher("matched_repr", SensorsInput, queue_size=1)
 		self.sub = rospy.Subscriber(camera_topic, Image,
-									self.image_parserCB, queue_size=1, buff_size=50000000)
+									self.image_parserCB, queue_size=1, buff_size=100000000)	#size of the incoming image: 589824		# of buff_size was 5000000
 		self.map_sub = rospy.Subscriber("map_representations", SensorsInput,
 										self.map_parserCB, queue_size=1, buff_size=50000000)
 
 		self.last_live = None
 		self.sns_in_msg = None
-		rospy.spin()
 
 	def parse_camera_msg(self, msg):
 		img = ros_numpy.numpify(msg)
@@ -68,10 +67,7 @@ class RepresentationMatching:
 		if self.last_live is None:
 			self.last_live = live_feature[0]
 		out = FeaturesList(image.header, [live_feature[0]])
-		try:
-			self.pub.publish(out)
-		except Exception as e:
-			rospy.logerr("Failed to publish live_representations! - raised exception " + str(e))
+		self.pub.publish(out)
 
 		if tmp_sns_in is None:
 			return
@@ -101,10 +97,7 @@ class RepresentationMatching:
 		align_out.map_offset = tmp_sns_in.map_offset
 
 		# rospy.logwarn("sending: " + str(hists.shape) + " " + str(tmp_sns_in.map_distances))
-		try:
-			self.pub_match.publish(align_out)
-		except Exception as e:
-			rospy.logerr("Failed to publish matched_repr! - raised exception " + str(e))
+		self.pub_match.publish(align_out)
 		self.last_live = live_feature[0]
 
 	def map_parserCB(self, sns_in):
@@ -113,3 +106,4 @@ class RepresentationMatching:
 
 if __name__ == '__main__':
    r = RepresentationMatching()
+   rospy.spin()
