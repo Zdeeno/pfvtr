@@ -39,7 +39,10 @@ class LidarProcessing(DepthSensorProcessing):
 
 	def process_data(self) -> None:				# cut desired fov and map values to desired range			
 		# depth_data_cutout = self.cutout_fov()
-		self.depth_data_processed = self.normalize_it(self.depth_data_raw.ranges)	
+		# Zdenek: We need to fetch raw ranges to calculate the reward. The normalization should be done in observation parsing.
+		# TODO: this should be reimplemented - it can be directly published from callback
+		# self.depth_data_processed = self.normalize_it(self.depth_data_raw.ranges)
+		self.depth_data_processed = self.depth_data_raw.ranges
 		 
 	def cutout_fov(self) -> list[float]:			# fov (field of view) is angle of the final lidar cuttout
 		if self.fov < 0 or self.fov > 360:
@@ -53,7 +56,7 @@ class LidarProcessing(DepthSensorProcessing):
 	
 	def normalize_it(self, depth_data_cutout) -> list[float]:
 		temp_ranges = list(depth_data_cutout)
-		for i in range(len(temp_ranges)):
+		for i in range(len(temp_ranges)):		# TODO: do not use loops in python
 			if temp_ranges[i] != -1:		# normalize only rays inside fov
 				temp_ranges[i] = min(temp_ranges[i], self.depth_sensor_max_range)
 				temp_ranges[i] = -temp_ranges[i] / self.depth_sensor_max_range + 1		# TODO magic number
