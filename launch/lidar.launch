@@ -1,0 +1,40 @@
+<?xml version="1.0" ?>
+<launch>
+
+    <!-- You should edit these parameters to point to your topics -->
+
+    <arg name="camera_topic" default="/robot1/camera1/image" doc="Camera topic name" />
+    <arg name="cmd_vel_pub" default="/bluetooth_teleop/cmd_vel" doc="The topic that cmd_vel messages will be published on when replaying a map (can be the same as cmd_vel_sub)" />
+    <arg name="cmd_vel_sub" default="/bluetooth_teleop/cmd_vel" doc="The topic that cmd_vel messages will be recorded from when making a map (can be the same as cmd_vel_pub)" />
+    <arg name="odom_topic" default="/robot1/odometry" doc="The topic that odometry information will be read from" />
+    <arg name="additional_record_topics" default="/robot1/odometry" doc="Use this parameter to record any additional topics you wish to be in your map and repeated each traversal. Space separated topics names." />
+    <arg name="depth_sensor_topic" default="/robot1/lidar" doc="Depth sensor topic name" />
+    <arg name="depth_sensor_max_range" default="5.0" doc="Depth sensor maximum detection range" />
+    <arg name="depth_sensor_min_range" default="0.0" doc="Depth sensor minimum detection range" />
+
+    <!-- You should not need to edit anything below this line. -->
+
+    <arg name="particle_num" default="600" doc="Number of particles" />
+    <arg name="odom_error" default="0.05" doc="Percentual odometry inaccuracy" />
+    <arg name="dist_init_std" default="1.0" doc="Standart deviation for particle initial spawn in distance dimension" />
+    <arg name="align_beta" default="30.0" doc="Scaling factor of individual histograms" />
+    <arg name="align_init_std" default="0.3" doc="Standart deviation for particle initial spawn in displacement dimension" />
+    <arg name="add_random" default="0.1" doc="Percentage of randomly (uniformly) spawned particles each timestep" />
+    <arg name="model_path" default="" doc="Path to the folder with models. If empty default tiny model is used." />
+   
+    <!-- Tunable parameters -->
+
+    <arg name="choice_beta" default="3.0" doc="Scaling factor for likelihoods of individual particles - higher value makes filtering to choose only particles with high likelihoods. Effectively, higher the value the more is used visual feedback and less odometry. We suggest 1.5-2.0 for large outdoor environments and 3.0 for indoor." />
+    <arg name="matching_type" default="siam" doc="representation matching scheme - use siam or siam_f" />
+
+	<group ns="pfvtr">
+
+	<node pkg="pfvtr" type="lidar_processing.py" name="lidar_processing" respawn="true" output="screen" args="-OO" >
+            <param name="depth_sensor_topic" type="string" value="$(arg depth_sensor_topic)" />
+            <param name="depth_sensor_max_range" type="double" value="$(arg depth_sensor_max_range)" />
+            <param name="depth_sensor_min_range" type="double" value="$(arg depth_sensor_min_range)" />
+            <param name="model_path" type="string" value="$(arg model_path)" />
+        </node>
+
+    </group>
+</launch>
