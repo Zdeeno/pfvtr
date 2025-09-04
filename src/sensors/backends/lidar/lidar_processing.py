@@ -39,7 +39,10 @@ class LidarProcessing(DepthSensorProcessing):
 
 	def process_data(self) -> None:				# cut desired fov and map values to desired range			
 		# depth_data_cutout = self.cutout_fov()
-		self.depth_data_processed = self.normalize_it(self.depth_data_raw.ranges)	
+		# Zdenek: We need to fetch raw ranges to calculate the reward. The normalization should be done in observation parsing.
+		# TODO: this should be reimplemented - it can be directly published from callback
+		# self.depth_data_processed = self.normalize_it(self.depth_data_raw.ranges)
+		self.depth_data_processed = self.depth_data_raw.ranges
 		 
 	def cutout_fov(self) -> list[float]:			# fov (field of view) is angle of the final lidar cuttout
 		if self.fov < 0 or self.fov > 360:
@@ -53,7 +56,7 @@ class LidarProcessing(DepthSensorProcessing):
 	
 	def normalize_it(self, depth_data_cutout) -> list[float]:
 		temp_ranges = list(depth_data_cutout)
-		for i in range(len(temp_ranges)):
+		for i in range(len(temp_ranges)):		# TODO: do not use loops in python
 			if temp_ranges[i] != -1:		# normalize only rays inside fov
 				temp_ranges[i] = min(temp_ranges[i], self.depth_sensor_max_range)
 				temp_ranges[i] = -temp_ranges[i] / self.depth_sensor_max_range + 1		# TODO magic number
@@ -66,6 +69,35 @@ class LidarProcessing(DepthSensorProcessing):
 	def fetch_fov(self, msg_req):
 		self.fov = msg_req.fov
 		return FetchFovResponse()
+
+
+class DummyLidarProcessing:
+	def __init__(self):
+		super().__init__()
+		rospy.init_node('lidar_processing')
+		rospy.loginfo("Lidar Processing started")
+		self.lidar_pub = rospy.Publisher("/lidar_processed", LidarProcessed, queue_size=1)
+		self.depth_sensor_max_range = rospy.get_param("~depth_sensor_max_range")
+		self.depth_sensor_min_range = rospy.get_param("~depth_sensor_min_range")
+		# self.fov = 360								# fov = field of view of depth sensor - different for each episode, 360 (full; view) is default
+		# self.fov_service = rospy.Service("fetch_fov", FetchFov, self.fetch_fov)
+		self.dummy_publisher()
+
+	def dummy_publisher(self):
+		rate = rospy.Rate(120)  # Hz
+		while not rospy.is_shutdown():
+			try:
+				# Publish the odometry message
+				msg_out = LidarProcessed()
+				msg_out.ranges = np.zeros(360)
+				msg_out.closest_obstacle = 5
+				self.lidar_pub.publish(msg_out)
+
+			except Exception as e:
+				rospy.logwarn("Lidar dummy failed lookup failed ... " + str(e))
+
+			rate.sleep()
+
 	 
 if __name__ == '__main__':
-	lidar_class_instance = LidarProcessing()
+	lidar_class_instance = DummyLidarProcessing()
