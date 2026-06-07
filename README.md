@@ -1,6 +1,8 @@
 # Particle-filtered Visual Teach and Repeat Navigation
 
-# THIS REPOSITORY IS DEPRECATED - MAINTAINED ROS2 VERSION AVAILABLE [HERE](https://github.com/Juliaa65/pfvtr_ros2). <br>
+## THIS REPOSITORY IS DEPRECATED - MAINTAINED ROS2 VERSION AVAILABLE [HERE](https://github.com/Juliaa65/pfvtr_ros2) <br>
+
+## UNIFIED TESTING ENVIRONMENT AVAILABLE [HERE](https://github.com/Zdeeno/vtr_ros2_testbed) <br>
 
 
 ## Overview
