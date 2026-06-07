@@ -1,5 +1,8 @@
 # Particle-filtered Visual Teach and Repeat Navigation
 
+# THIS REPOSITORY IS DEPRECATED FOR ROS2 VERSION [HERE](https://github.com/Juliaa65/pfvtr_ros2). <br>
+
+
 ## Overview
 
 This ROS package allows a robot to be taught a path through an environment using a monocular uncalibrated camera.<br>
